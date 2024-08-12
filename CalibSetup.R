@@ -17,6 +17,13 @@
 #' @export
 
 CalibSetup <- function(bounds, constraint_func){
+
+	fn = names(bounds)
+	bmattmp = matrix(0, length(bounds), 2)
+	for (i in 1:length(bounds)){
+		bmattmp[i, ] = bounds[[fn[i]]]
+	}
+
 	out <- list(
 		nexp = 0,
 		ys = NULL,
@@ -25,6 +32,7 @@ CalibSetup <- function(bounds, constraint_func){
 		tl = 1,
 		itl = 1/1,
 		bounds = bounds,
+		bounds_mat = bmattmp,
 		checkConstraints = constraint_func,
 		p = length(bounds),
 		nmcmc = 10000,

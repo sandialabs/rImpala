@@ -49,7 +49,7 @@ calibPool <- function(setup){
 	}
 
 	pred_curr = vector(mode = "list", length = setup$nexp)
-	llik_curr = matrix(0, setup$nexp, setup$temps)
+	llik_curr = matrix(0, setup$nexp, setup$ntemps)
 	marg_lik_cov_cur = vector(mode = "list", length = setup$nexp)
 	for (i in 1:setup$nexp){
 		marg_lik_cov_cur[[i]] = vector(mode = "list", length = setup$ntemps)
