@@ -78,7 +78,7 @@ discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp){
 }
 
 
-eval.ModelBassPca_func <- function(obj, parmat, pool nugget){
+eval.ModelBassPca_func <- function(obj, parmat, pool, nugget){
 	fn = obj$input_names
 	parmat_array = matrix(0, length(parmat[[fn[0]]]), length(fn))
 	for (i in 1:length(fn)){
@@ -97,7 +97,7 @@ eval.ModelBassPca_func <- function(obj, parmat, pool nugget){
 
 llik.ModelBassPca_func <- function(obj, yobs, pred, cov){
 	vec = yobs - pred
-	out = -0.5*(cov$ldet + t(vec) %*% cov$inv $*$ vec)
+	out = -0.5*(cov$ldet + t(vec) %*% cov$inv %*% vec)
 	out
 }
 

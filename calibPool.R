@@ -75,7 +75,7 @@ calibPool <- function(setup){
 
 	count = matrix(0, setup$ntemps, setup$ntemps)
 	count_s2 = matrix(0, setup$nexp, setup$ntemps)
-	count_decor = matrix(0, setup$p setup$ntemps)
+	count_decor = matrix(0, setup$p, setup$ntemps)
 
 	discrep_curr = pred_curr
 	for (i in 1:length(discrep_curr)){
@@ -102,7 +102,7 @@ calibPool <- function(setup){
 
 		for (i in 1:setup$nexp){
 			log_s2[[i]][m, ] = log_s2[[i]][m-1,]
-			if (setup$models[[i]].nd > 0){
+			if (setup$models[[i]]$nd > 0){
 				for (t in 1:setup$ntemps){
 					discrep_vars[[i]][m,t,] = discrep_sample(setup$models[[i]], setup$ys[[i]], pred_curr[[i]][t,], marg_lik_cov_cur[[i]][[t]], setup$itl[t])
 					discrep_curr[[i]][t,] = setup$models[[i]]$D %*% discrep_vars[[i]][m, t,]
@@ -254,10 +254,10 @@ calibPool <- function(setup){
 				sw_alpha = sw_alpha * 0
 				sw_alpha = sw_alpha + (setup$itl[sw[2,]] - setup$itl[sw[1,]])*(colSums(llik_curr[,sw[1,]]) - colSums(llik_curr[,sw[2,]]))
 				for (i in 1:setup$nexp){
-					sw_alpha = sw_alpha + (setup$itl[sw[2,]] - setup$itl[sw[1,])] * 
+					sw_alpha = sw_alpha + (setup$itl[sw[2,]] - setup$itl[sw[1,]]) * 
 						(colSums(setup$s2_prior_kern[[i]](exp(log_s2[[i]][m,sw[1,]]), setup$ig_a[[i]], setup$ig_b[[i]])) - 
 						colSums(setup$s2_prior_kern[[i]](exp(log_s2[[i]][m,sw[2,]]), setup$ig_a[[i]], setup$ig_b[[i]])))
-					if (setup$models[[i]].nd > 0){
+					if (setup$models[[i]]$nd > 0){
 						sw_alpha = sw_alpha + (setup$itl[sw[2,]] - setup$itl[sw[1,]]) * 
                         	(-0.5 * rowSums(discrep_vars[[i]][m,(sw[1,])]^2) / setup$models[[i]]$discrep_tau +
                         	0.5 * rowSums(discrep_vars[[i]][m,(sw[2,])]^2) / setup$models[[i]]$discrep_tau)

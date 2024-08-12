@@ -16,8 +16,8 @@
 #'  
 #' @return An object of class `CalibSetup`
 #' 
-addVecExpperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind
-                               meas_error_cor=NULL, theta_ind=NULL, D=NULL, 
+addVecExperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind,
+                              meas_error_cor=NULL, theta_ind=NULL, D=NULL, 
 							   discrep_tau=NULL){
 	
 	N = length(obj$ys)
@@ -39,10 +39,10 @@ addVecExpperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind
 	
 	model = list(exp_ind = theta_ind,
 	             yobs = yobs,
-				 meas_error_cor = meas_error_cor
-				 D = D,
-				 nd = nd,
-				 discrep_tau = discrep_tau)
+				       meas_error_cor = meas_error_cor,
+				       D = D,
+				       nd = nd,
+				       discrep_tau = discrep_tau)
 
 	obj$ntheta = c(obj$ntheta, length(unique(theta_ind)))
 	obj$nclustmax = max(sum(obj$ntheta), 10)
@@ -78,7 +78,7 @@ addVecExpperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind
 		obj$s2_exp_ind[[N+1]] = 1:length(sd_est)
 		obj$ns2[[N+1]] = length(sd_est)
 		obj$ny_s2[[N+1]] = vec
-		f (sum(s2_df == 0) > 1){
+		if (sum(s2_df == 0) > 1){
 			obj$s2_prior_kern[[N+1]] = ldhc_kern
 		} else {
 			obj$s2_prior_kern[[N+1]] = ldig_kern

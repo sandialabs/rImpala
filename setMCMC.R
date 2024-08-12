@@ -14,9 +14,9 @@
 #' @return An object of class `CalibSetup`
 #' 
 setMCMC <- function(obj, nmcmc, nburn=0, thin=1, decor=100,
-                    start_var_theta=1e-8, start_tau_theta=0
-					start_var_ls2=1e-5, start_tau_ls2=0,
-					start_adapt_iter=300){
+                    start_var_theta=1e-8, start_tau_theta=0,
+					          start_var_ls2=1e-5, start_tau_ls2=0,
+					          start_adapt_iter=300){
 
 	obj$nmcmc = nmcmc
 	obj$nburn = nburn
