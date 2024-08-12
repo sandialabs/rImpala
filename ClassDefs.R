@@ -18,22 +18,22 @@ lik_cov_inv.default <- function(obj, ...) {
 }
 
 
-discrep_sample <- function(obj) {
+discrep_sample <- function(obj, ...) {
   UseMethod("discrep_sample")
 }
 
 
-discrep_sample.default <- function(obj) {
+discrep_sample.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
 
 
-step <- function(obj) {
+step <- function(obj, ...) {
   UseMethod("step")
 }
 
 
-step.default <- function(obj) {
+step.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
 

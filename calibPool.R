@@ -84,7 +84,7 @@ calibPool <- function(setup){
 
 	discrep_vars = vector(mode = "list", length = setup$nexp)
 	for (i in 1:setup$nexp){
-		discrep_vars[[i]] = array(0, dim=c(setup$nmcmc, setup$ntemps, setup.models[[i]]$nd))
+		discrep_vars[[i]] = array(0, dim=c(setup$nmcmc, setup$ntemps, setup$models[[i]]$nd))
 	}
 
 	alpha = rep(1, setup$ntemps) * -Inf
@@ -101,7 +101,7 @@ calibPool <- function(setup){
 		theta[m, ,] = theta[m-1, ,]
 
 		for (i in 1:setup$nexp){
-			log_s2[[i]][m, ] = log_s2[[i]][m-1,]
+			log_s2[[i]][m, ,] = log_s2[[i]][m-1, ,]
 			if (setup$models[[i]]$nd > 0){
 				for (t in 1:setup$ntemps){
 					discrep_vars[[i]][m,t,] = discrep_sample(setup$models[[i]], setup$ys[[i]], pred_curr[[i]][t,], marg_lik_cov_cur[[i]][[t]], setup$itl[t])
