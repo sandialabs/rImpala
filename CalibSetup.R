@@ -25,6 +25,7 @@ CalibSetup <- function(bounds, constraint_func){
 		tl = 1,
 		itl = 1/1,
 		bounds = bounds,
+		checkConstraints = constraint_func,
 		p = length(bounds),
 		nmcmc = 10000,
 		nburn = 5000,

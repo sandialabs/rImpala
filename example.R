@@ -69,3 +69,19 @@ emu_vv = bassPCA(x_train, t(vv_train), n.pc=4)
 plot(emu_vv)
 
 # impala
+input_names = c("theta0", "theta1", "theta2")
+bounds = list()
+bounds[['theta0']] = c(0, 1)
+bounds[['theta1']] = c(0, 1)
+bounds[['theta2']] = c(0, 1)
+
+setup = CalibSetup(bounds, cf_bounds)
+
+model_ftilde = ModelBassPca_func(emu_ftilde, input_names)
+model_vv = ModelBassPca_func(emu_vv, input_names)
+
+setup = addVecExperiments(setup, t(ftilde_obs), model_ftilde, 0.01, 20, rep(1, nt))
+setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))
+setup = setTemperatureLadder(setup, 1.05^(0:3))
+setup = setMCMC(setup, 4000, 2000, 1, 10)
+out = calibPool(setup)
