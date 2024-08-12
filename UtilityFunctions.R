@@ -16,7 +16,7 @@ swm <- function(Ainv, U, Cinv, V, Aldet, Cldet){
 	in_mat = chol_solve(Cinv + V%*%Ainv%*%U)
 	inv1 = Ainv - Ainv %*% U %*% in_mat$inv %*% V %*% Ainv
 	ldet = in_mat$ldet + Aldet + Cldet
-	out = list(inv = inv, ldet = ldet)
+	out = list(inv = inv1, ldet = ldet)
 	out
 }
 

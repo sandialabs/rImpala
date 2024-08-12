@@ -9,6 +9,7 @@ source("ModelBassPca_func.R")
 source("setMCMC.R")
 source("setTemperatureLadder.R")
 source("UtilityFunctions.R")
+source("ClassDefs.R")
 
 # generate functions
 f<-function(x){

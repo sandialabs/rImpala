@@ -18,7 +18,7 @@
 #' 
 addVecExperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind,
                               meas_error_cor=NULL, theta_ind=NULL, D=NULL, 
-							   discrep_tau=NULL){
+							   discrep_tau=1){
 	
 	N = length(obj$ys)
 
@@ -37,12 +37,18 @@ addVecExperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind,
 		nd = ncol(D)
 	}
 	
-	model = list(exp_ind = theta_ind,
-	             yobs = yobs,
-				       meas_error_cor = meas_error_cor,
-				       D = D,
-				       nd = nd,
-				       discrep_tau = discrep_tau)
+	model$exp_ind = theta_ind
+	model$yobs = yobs
+	if (!is.null(meas_error_cor)){
+		model$meas_error_cor = meas_error_cor
+	}
+	
+	if (!is.null(D)){
+		model$D = D
+		model$nd = nd
+		model$discrep_tau = discrep_tau
+	}
+	
 
 	obj$ntheta = c(obj$ntheta, length(unique(theta_ind)))
 	obj$nclustmax = max(sum(obj$ntheta), 10)
@@ -51,7 +57,7 @@ addVecExperiments <- function(obj, yobs, model, sd_est, s2_df, s2_ind,
 		obj$ys = list(yobs)
 		obj$y_lens = length(yobs)
 		obj$theta_ind = list(theta_ind)
-		obj$models = model
+		obj$models = list(model)
 		obj$sd_est = list(sd_est)
 		obj$s2_df = list(s2_df)
 		obj$ig_a = list(s2_df/2)

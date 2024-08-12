@@ -54,16 +54,16 @@ calibPool <- function(setup){
 	for (i in 1:setup$nexp){
 		marg_lik_cov_cur[[i]] = vector(mode = "list", length = setup$ntemps)
 		for (t in 1:setup$ntemps){
-			tmp = exp(log_s2[[i]][t, setup$s2_ind[[i]]])
+			tmp = exp(log_s2[[i]][1, t, setup$s2_ind[[i]]])
 			marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmp[setup$s2_ind[[i]]])
 		}
 	}
 
 	for (i in 1:setup$nexp){
-		pred_curr[[i]] = eval(setup$models[[i]], tran_unif(theta[1,,], setup$bounds_mat, names(setup.bounds)), TRUE)
+		pred_curr[[i]] = eval(setup$models[[i]], tran_unif(theta[1,,], setup$bounds_mat, names(setup$bounds)), TRUE)
 
 		for (t in 1:setup$ntemps){
-			llik_curr[i, t] = llik(setup$models[[i]], setup$ys[[i]], pred_curr[[i]][t,], marg_lik_cov_curr[i][t])
+			llik_curr[i, t] = llik(setup$models[[i]], setup$ys[[i]], pred_curr[[i]][t,], marg_lik_cov_cur[[i]][[t]])
 		}
 	}
 

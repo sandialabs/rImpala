@@ -78,32 +78,32 @@ discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp){
 }
 
 
-eval.ModelBassPca_func <- function(obj, parmat, pool, nugget){
+eval.ModelBassPca_func <- function(obj, parmat, pool=TRUE, nugget=FALSE){
 	fn = obj$input_names
-	parmat_array = matrix(0, length(parmat[[fn[0]]]), length(fn))
+	parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
 	for (i in 1:length(fn)){
 		parmat_array[, i] = parmat[[fn[i]]]
 	}
 
 	if (pool){
-		pred = predict(obj$model, parmat_array, mcmc_use=obj$ii, nugget=nugget)
+		pred = predict(obj$model, parmat_array, mcmc.use=obj$ii, nugget=nugget)
 	} else{
 		cli::cli_abort("Not Implemented")
 	}
 
-	pred
+	pred[1,,]
 }
 
 
 llik.ModelBassPca_func <- function(obj, yobs, pred, cov){
-	vec = yobs - pred
+	vec = c(yobs - pred)
 	out = -0.5*(cov$ldet + t(vec) %*% cov$inv %*% vec)
 	out
 }
 
 
 lik_cov_inv.ModelBassPca_func <- function(obj, s2vec){
-	vec = obj$trunv_error_var + s2vec
+	vec = obj$trunc_error_var + s2vec
 	Ainv = diag(1/vec)
 	Aldet = sum(log(vec))
 	out = swm(Ainv, obj$basis, diag(1/obj$emu_vars), t(obj$basis), Aldet, sum(log(obj$emu_vars)))
