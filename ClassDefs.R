@@ -48,8 +48,8 @@ eval.default <- function(obj, ...) {
 }
 
 
-update <- function(obj, ...){
-	UseMethod("update")
+update <- function(obj, ...) {
+  UseMethod("update")
 }
 
 
@@ -58,8 +58,8 @@ update.default <- function(obj, ...) {
 }
 
 
-update_tau <- function(obj, ...){
-	UseMethod("update_tau")
+update_tau <- function(obj, ...) {
+  UseMethod("update_tau")
 }
 
 
@@ -68,8 +68,8 @@ update_tau.default <- function(obj, ...) {
 }
 
 
-gen_cand <- function(obj, ...){
-	UseMethod("gen_cand")
+gen_cand <- function(obj, ...) {
+  UseMethod("gen_cand")
 }
 
 
