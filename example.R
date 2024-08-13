@@ -111,4 +111,4 @@ setup = addVecExperiments(setup, t(ftilde_obs), model_ftilde, 0.01, 20, rep(1, n
 setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))
 setup = setTemperatureLadder(setup, 1.05 ^ (0:3))
 setup = setMCMC(setup, 4000, 2000, 1, 10)
-out = calibPool(setup)
+out_cal = calibPool(setup)

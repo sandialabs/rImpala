@@ -1,4 +1,4 @@
-#' This function setups up MCMC parameters for adapative MCMC,
+#' This function setups up MCMC parameters for adaptive MCMC,
 #' also includes tempering and decorrelation steps
 #'
 #' @param nmcmc: number of mcmc iterations
@@ -9,7 +9,7 @@
 #' @param start_tau_theta: start tau of theta (default: 0)
 #' @param start_var_ls2: start variance of sigma proposal (default: 1e-5)
 #' @param start_tau_ls2: start tau of sigma (default: 0)
-#' @param start_adpat_iter: number of iterations before adapation
+#' @param start_adpat_iter: number of iterations before adaption
 #'                          (default: 300)
 #' @return An object of class `CalibSetup`
 #'

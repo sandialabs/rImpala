@@ -1,6 +1,6 @@
 library(progress)
 
-#' his function runs pooled Bayesian Model Calibration with adapative MCMC,
+#' This function runs pooled Bayesian Model Calibration with adaptive MCMC,
 #' tempering, and decorrelation steps
 #'
 #' input theta will be normalized to 0-1 and sampled from uniform priors
@@ -13,11 +13,11 @@ library(progress)
 #' - s2: mcmc samples of error variance
 #' - count: number of counts of acceptance
 #' - count_s2: number of counts of acceptance on error variance
-#' - count_decor: number of times decorrelation occured
+#' - count_decor: number of times decorrelation occurred
 #' - cov_theta_cand: final theta covariance
 #' - cov_ls2_cand: final error covariance
 #' - pred_curr: current emulator predictions
-#' - discrep_vars: discrepency coefficients
+#' - discrep_vars: discrepancy coefficients
 #' - llik: log likelihood
 #' - theta_native: mcmc samples of variables in native scale
 #'
@@ -167,7 +167,7 @@ calibPool <- function(setup) {
     if (any(good_values)) {
       llik_cand[, good_values = 0]
       for (i in 1:setup$nexp) {
-        theta_tmp = matrix(theta_cand[good_values, ], ncol=setup$p)
+        theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
         pred_cand[[i]][good_values, ] = eval(setup$models[[i]],
                                              tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
                                              TRUE)
@@ -214,13 +214,9 @@ calibPool <- function(setup) {
         if (any(good_values)) {
           llik_cand[, good_values] = 0
           for (i in 1:setup$nexp) {
-            theta_tmp = matrix(theta_cand[good_values, ], ncol=setup$p)
+            theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
             pred_cand[[i]][good_values, ] = eval(setup$models[[i]],
-                                                 tran_unif(
-                                                   theta_tmp,
-                                                   setup$bounds_mat,
-                                                   names(setup$bounds)
-                                                 ),
+                                                 tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
                                                  TRUE)
             for (t in 1:setup$ntemps) {
               llik_cand[i, t] = llik(
@@ -290,13 +286,13 @@ calibPool <- function(setup) {
             marg_lik_cov_candi[[t]]
           )
         }
-
+        
         llik_diffi = (llik_candi - llik_curr[i, ])
         alpha_s2 = setup$itl * llik_diffi
         alpha_s2 = alpha_s2 + setup$itl * rowSums(setup$s2_prior_kern[[i]](exp(ls2_candi), setup$ig_a[[i]], setup$ig_b[[i]]))
         alpha_s2 = alpha_s2 + setup$itl * rowSums(ls2_candi)
-        alpha_s2 = alpha_s2 - setup$itl * colSums(setup$s2_prior_kern[[i]](exp(t(log_s2[[i]][m - 1, ,])), setup$ig_a[[i]], setup$ig_b[[i]]))
-        alpha_s2 = alpha_s2 - setup$itl * colSums(t(log_s2[[i]][m - 1, ,]))
+        alpha_s2 = alpha_s2 - setup$itl * colSums(setup$s2_prior_kern[[i]](exp(t(log_s2[[i]][m - 1, , ])), setup$ig_a[[i]], setup$ig_b[[i]]))
+        alpha_s2 = alpha_s2 - setup$itl * colSums(t(log_s2[[i]][m - 1, , ]))
         
         idx = which(log(runif(setup$ntemps)) < alpha_s2)
         for (t in idx) {
@@ -322,12 +318,12 @@ calibPool <- function(setup) {
         sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ]]) - colSums(llik_curr[, sw[2, ]]))
         for (i in 1:setup$nexp) {
           sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
-            (colSums(
-              setup$s2_prior_kern[[i]](exp(log_s2[[i]][m, sw[1, ]]), setup$ig_a[[i]], setup$ig_b[[i]])
-            ) -
-              colSums(
-                setup$s2_prior_kern[[i]](exp(log_s2[[i]][m, sw[2, ]]), setup$ig_a[[i]], setup$ig_b[[i]])
-              ))
+            (rowSums(matrix(
+              setup$s2_prior_kern[[i]](exp(log_s2[[i]][m, sw[1, ], ]), setup$ig_a[[i]], setup$ig_b[[i]])
+            )) -
+              rowSums(matrix(
+                setup$s2_prior_kern[[i]](exp(log_s2[[i]][m, sw[2, ], ]), setup$ig_a[[i]], setup$ig_b[[i]])
+              )))
           if (setup$models[[i]]$nd > 0) {
             sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
               (
@@ -343,8 +339,8 @@ calibPool <- function(setup) {
         for (tti in idx) {
           tt = sw[, tti]
           for (i in 1:setup$nexp) {
-            log_s2[[i]][m, tt[1]] = log_s2[[i]][m, tt[2]]
-            log_s2[[i]][m, tt[2]] = log_s2[[i]][m, tt[1]]
+            log_s2[[i]][m, tt[1], ] = log_s2[[i]][m, tt[2], ]
+            log_s2[[i]][m, tt[2], ] = log_s2[[i]][m, tt[1], ]
             marg_lik_cov_cur[[i]][tt[1]] = marg_lik_cov_cur[[i]][tt[2]]
             marg_lik_cov_cur[[i]][tt[2]] = marg_lik_cov_cur[[i]][tt[1]]
             pred_curr[[i]][tt[1], ] = pred_curr[[i]][tt[2], ]
@@ -372,33 +368,24 @@ calibPool <- function(setup) {
   
   s2 = log_s2
   for (i in 1:setup$nexp) {
-    s2[[i]] = exp(log_sw[[i]])
+    s2[[i]] = exp(log_s2[[i]])
   }
   
   theta_native = tran_unif(theta[, 1, ], setup$bounds_mat, names(setup$bounds))
   
-  out$theta = theta
-  
-  out$s2 = s2
-  
-  out$count = count
-  
-  out$count_s2 = count_s2
-  
-  out$count_decor = count_decor
-  
-  out$cov_theta_cand = cov_theta_cand
-  
-  out$cov_ls2_cand = cov_ls2_cand
-  
-  out$pred_curr = pred_curr
-  
-  out$discrep_vars = discrep_vars
-  
-  out$llik = llik
-  
-  out$theta_native = theta_native
-  
+  out <- list(
+    theta = theta,
+    s2 = s2,
+    count = count,
+    count_s2 = count_s2,
+    count_decor = count_decor,
+    cov_theta_cand = cov_theta_cand,
+    cov_ls2_cand = cov_ls2_cand,
+    pred_curr = pred_curr,
+    discrep_vars = discrep_vars,
+    llik = llik,
+    theta_native = data.frame(theta_native)
+  )
   
   out
 }
