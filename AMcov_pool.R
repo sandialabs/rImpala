@@ -30,7 +30,6 @@ AMcov_pool <- function(ntemps,
 
 update.AMcov_pool <- function(obj, x, m) {
   if (m > obj$start_adapt_iter) {
-    browser()
     obj$mu = obj$mu + (x[m - 1, , ] - obj$mu) / m
     tmp = x[m - 1, , ] - obj$mu
     if (ndims(tmp) == 0){
@@ -44,7 +43,7 @@ update.AMcov_pool <- function(obj, x, m) {
     eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify="array")
     if (obj$p == 1){
       eyetmp = matrix(eyetmp)
-      tmp = array(obj$cov + eyetmp * obj$eps, dim=c(4,1,1))
+      tmp = array(obj$cov + eyetmp * obj$eps, dim=c(nrow(eyetmp),1,1))
       obj$S  = obj$AM_SCALAR * einsum('ijk,i->ijk', tmp, exp(obj$tau))
     } else {
       eyetmp = aperm(eyetmp, c(3,1,2))
