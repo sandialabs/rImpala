@@ -76,7 +76,7 @@ step.ModelBassPca_func <- function(obj) {
 discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S, m), S / itemp)
+  discrep_vars = chol_sample(solve(S) %*% m, S / itemp)
   discrep_vars
 }
 

@@ -82,7 +82,9 @@ cov_3d_pcm <- function(arr, mean) {
   } else if (ndims(arr) == 2){
     meantmp = replicate(N, mean, simplify="array")
     meantmp = aperm(meantmp, c(2,1))
-    out = matrix(diag(cov(arr - meantmp)))
+    tmp = array(arr - meantmp, dim=c(nrow(arr), ncol(arr),1))
+    out = einsum('kij,kil->ijl', tmp, tmp) / (N - 1)
+    out = out[,,1]
   }
   out
 }
