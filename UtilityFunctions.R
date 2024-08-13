@@ -1,5 +1,10 @@
 library(einsum)
 
+ndims <- function(x){
+  return(length(dim(x)))
+}
+
+
 ldhc_kern <- function(x, a, b) {
   out = -log(x + 1)
   out
@@ -70,6 +75,14 @@ tran_unif <- function(th, bounds, names) {
 
 cov_3d_pcm <- function(arr, mean) {
   N = nrow(arr)
-  out = einsum('kij,kil->ijl', arr - mean, arr - mean) / (N - 1)
+  if (ndims(arr) == 3){
+    meantmp = replicate(N, mean, simplify="array")
+    meantmp = aperm(meantmp, c(3,1,2))
+    out = einsum('kij,kil->ijl', arr - meantmp, arr - meantmp) / (N - 1)
+  } else if (ndims(arr) == 2){
+    meantmp = replicate(N, mean, simplify="array")
+    meantmp = aperm(meantmp, c(2,1))
+    out = matrix(diag(cov(arr - meantmp)))
+  }
   out
 }

@@ -23,8 +23,8 @@ AMcov_pool <- function(ntemps,
     count_100 = rep(0, ntemps)
   )
   
-  class(out) <- "AMcov_pool"
-  out
+  class(obj) <- "AMcov_pool"
+  obj
 }
 
 
@@ -32,19 +32,43 @@ update.AMcov_pool <- function(obj, x, m) {
   if (m > obj$start_adapt_iter) {
     obj$mu = obj$mu + (x[m - 1, , ] - obj$mu) / m
     tmp = x[m - 1, , ] - obj$mu
-    obj$cov = ((m - 1) / m) * obj$cov  + ((m - 1) / (m * m)) * einsum('ti,tj->tij', tmp , tmp)
-    obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + diag(obj$p) * obj$eps, exp(obj$tau))
+    if (ndims(tmp) == 0){
+      tmp = matrix(tmp)
+      a = ((m - 1) / (m * m)) * einsum('ti,tj->tij', tmp , tmp)
+      obj$cov = ((m - 1) / m) * obj$cov  + matrix(a[,,1])
+    } else {
+      obj$cov = ((m - 1) / m) * obj$cov  + ((m - 1) / (m * m)) * einsum('ti,tj->tij', tmp , tmp)
+    }
+    
+    eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify="array")
+    if (obj$p == 1){
+      eyetmp = matrix(eyetmp)
+      tmp = array(obj$cov + eyetmp * obj$eps, dim=c(4,1,1))
+      obj$S  = obj$AM_SCALAR * einsum('ijk,i->ijk', tmp, exp(obj$tau))
+    } else {
+      eyetmp = aperm(eyetmp, c(3,1,2))
+      obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
+    }
+    
   } else if (m == obj$start_adapt_iter) {
     obj$mu = colMeans(x[1:m, , ])
     obj$cov = cov_3d_pcm(x[1:m, , ], obj$mu)
-    obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + diag(obj$p) * obj$eps, exp(obj$tau))
+    eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify="array")
+    if (obj$p == 1){
+      eyetmp = matrix(eyetmp)
+      tmp = array(obj$cov + eyetmp * obj$eps, dim=c(4,1,1))
+      obj$S  = obj$AM_SCALAR * einsum('ijk,i->ijk', tmp, exp(obj$tau))
+    } else {
+      eyetmp = aperm(eyetmp, c(3,1,2))
+      obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
+    }
   }
   obj
 }
 
 
 update_tau.AMcov_pool <- function(obj, m) {
-  if ((mod(m, 100) == 0) & (m > obj$start_adapt_iter)) {
+  if ((m %% 100 == 0) & (m > obj$start_adapt_iter)) {
     delta = min(0.5, 5 / sqrt(m + 1))
     obj$tau[obj$count_100 < 23] = obj$tau[obj$count_100 < 23] - delta
     obj$tau[obj$count_100 > 23] = obj$tau[obj$count_100 > 23] + delta
@@ -55,7 +79,11 @@ update_tau.AMcov_pool <- function(obj, m) {
 
 
 gen_cand.AMcov_pool <- function(obj, x, m) {
+  tmpchol = array(0, dim = dim(obj$S))
+  for (i in 1:dim(obj$S)[1]) {
+    tmpchol[i, , ] = t(chol(obj$S[i, , ]))
+  }
   tmp = matrix(rnorm(obj$ntemps * obj$p), obj$ntemps)
-  x_cand = x[m - 1, , ] + np.einsum('ijk,ik->ij', chol(obj$S), tmp)
+  x_cand = x[m - 1, , ] + einsum('ijk,ik->ij', tmpchol, tmp)
   x_cand
 }

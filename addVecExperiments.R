@@ -73,9 +73,9 @@ addVecExperiments <- function(obj,
     obj$ns2 = list(length(sd_est))
     obj$ny_s2 = list(vec)
     if (sum(s2_df == 0) > 1) {
-      obj.s2_prior_kern = list(ldhc_kern)
+      obj$s2_prior_kern = list(ldhc_kern)
     } else {
-      obj.s2_prior_kern = list(ldig_kern)
+      obj$s2_prior_kern = list(ldig_kern)
     }
   } else {
     obj$ys[[N + 1]] = yobs
