@@ -53,7 +53,7 @@ update.AMcov_pool <- function(obj, x, m) {
   } else if (m == obj$start_adapt_iter) {
     obj$mu = colMeans(x[1:m, , ])
     obj$cov = cov_3d_pcm(x[1:m, , ], obj$mu)
-    eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify="array")
+    eyetmp = replicate(obj$ntemps, diag(obj$p), simplify="array")
     if (obj$p == 1){
       eyetmp = matrix(eyetmp)
       tmp = array(obj$cov + eyetmp * obj$eps, dim=c(length(eyetmp),1,1))

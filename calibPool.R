@@ -185,7 +185,7 @@ calibPool <- function(setup) {
     llik_diff = (colSums(llik_cand) - colSums(llik_curr))
     llik_diff = llik_diff[good_values]
     
-    alpha = alpha * -Inf
+    alpha = rep(1, setup$ntemps) * -Inf
     alpha[good_values] = setup$itl[good_values] * llik_diff
     idx = which(log(runif(setup$ntemps)) < alpha)
     for (t in idx) {
@@ -230,7 +230,7 @@ calibPool <- function(setup) {
           }
         }
         
-        alpha = alpha * -Inf
+        alpha = rep(1, setup$ntemps) * -Inf
         
         llik_diff = (colSums(llik_cand) - colSums(llik_curr))
         llik_diff = llik_diff[good_values]
@@ -314,7 +314,7 @@ calibPool <- function(setup) {
         sw = matrix(sw, setup$nswap_per, 2)
         sw = t(sw)
         
-        sw_alpha = sw_alpha * 0
+        sw_alpha = rep(0, setup$nswap_per)
         sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ]]) - colSums(llik_curr[, sw[2, ]]))
         for (i in 1:setup$nexp) {
           sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
