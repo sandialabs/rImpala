@@ -62,7 +62,7 @@ calibPool <- function(setup) {
   }
 
   for (i in 1:setup$nexp) {
-    pred_curr[[i]] = eval_m(setup$models[[i]],
+    pred_curr[[i]] = evalm(setup$models[[i]],
                           tran_unif(theta[1, , ], setup$bounds_mat, names(setup$bounds)),
                           TRUE)
 
@@ -136,7 +136,7 @@ calibPool <- function(setup) {
 
       setup$models[[i]] = step_m(setup$models[[i]])
       if (setup$models[[i]]$stochastic) {
-        pred_curr[[i]] = eval_m(setup$models[[i]],
+        pred_curr[[i]] = evalm(setup$models[[i]],
                               tran_unif(theta[m, , ], setup$bounds_mat, names(setup$bounds)),
                               TRUE)
       }
@@ -168,7 +168,7 @@ calibPool <- function(setup) {
       llik_cand[, good_values = 0]
       for (i in 1:setup$nexp) {
         theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
-        pred_cand[[i]][good_values, ] = eval_m(setup$models[[i]],
+        pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
                                              tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
                                              TRUE)
         for (t in 1:setup$ntemps) {
@@ -215,7 +215,7 @@ calibPool <- function(setup) {
           llik_cand[, good_values] = 0
           for (i in 1:setup$nexp) {
             theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
-            pred_cand[[i]][good_values, ] = eval_m(setup$models[[i]],
+            pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
                                                  tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
                                                  TRUE)
             for (t in 1:setup$ntemps) {

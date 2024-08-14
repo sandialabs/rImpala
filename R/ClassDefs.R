@@ -39,15 +39,16 @@ step_m.default <- function(obj, ...) {
 }
 
 
-eval_m <- function(obj, ...) {
-  UseMethod("eval_m")
+#' @export
+evalm <- function(obj, ...) {
+  UseMethod("evalm")
 }
+
 
 #' @export
-eval_m.default <- function(obj, ...) {
+evalm.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
-
 
 update_m <- function(obj, ...) {
   UseMethod("update_m")

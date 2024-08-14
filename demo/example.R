@@ -109,32 +109,19 @@ out_cal = calibPool(setup)
 
 # plots -------------------------------------------------------------------
 uu = seq(2500, 4000, 2)
-theta = tran_unif(out$theta[uu, 1, ], setup$bounds_mat, names(setup$bounds))
+theta = tran_unif(out_cal$theta[uu, 1, ], setup$bounds_mat, names(setup$bounds))
 expnums = 1
 
 cnt = 1
 ftilde_pred_obs = vector(mode = "list", length = setup$nexp)
 gam_pred_obs = vector(mode = "list", length = setup$nexp)
-median_pred = matrix(0, nt, length(expnums))
 for (idx in expnums) {
   time_new = seq(0, 1, length.out = nt)
 
-  ftilde_pred_obs[[idx]] = eval(setup$models[[cnt]], theta)
-  vv_pred_obs = eval(setup$models[[cnt + 1]], theta)
+  ftilde_pred_obs[[idx]] = evalm(setup$models[[cnt]], theta)
+  vv_pred_obs = evalm(setup$models[[cnt + 1]], theta)
   cnt = cnt + 2
   gam_pred_obs[[idx]] = v_to_gam(t(vv_pred_obs))
-
-  # compute median of posterior prediction
-  obj1 = time_warping(t(ftilde_pred_obs[[idx]]),
-                      time_new,
-                      centroid_type = "median",
-                      parallel = TRUE)
-  fmedian = apply(obj1$fn, 1, median)
-
-  obj1 = SqrtMedian(gam_pred_obs[[idx]])
-  gam_median = obj1$gam_median
-
-  median_pred[, idx] = warp_f_gamma(fmedian, time_new, invertGamma(gam_median))
 
   matplot(
     time_new,
@@ -248,4 +235,3 @@ for (idx in expnums){
   )
 
 }
-

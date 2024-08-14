@@ -86,10 +86,10 @@ discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp) {
 
 
 #' @export
-eval_m.ModelBassPca_func <- function(obj,
-                                   parmat,
-                                   pool = TRUE,
-                                   nugget = FALSE) {
+evalm.ModelBassPca_func <- function(obj,
+                                    parmat,
+                                    pool = TRUE,
+                                    nugget = FALSE) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
