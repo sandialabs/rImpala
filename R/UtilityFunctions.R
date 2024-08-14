@@ -3,6 +3,11 @@ ndims <- function(x){
 }
 
 
+cor2cov <- function(V, sd) {
+  V * tcrossprod(sd)
+}
+
+
 ldhc_kern <- function(x, a, b) {
   out = -log(x + 1)
   out

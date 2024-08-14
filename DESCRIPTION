@@ -15,10 +15,12 @@ LazyData: true
 Imports:
     progress,
     einsum,
-    BASS
+    BASS,
+    BayesPPR,
+    mvBayes,
+    fdasrvf
 Suggests: 
     coda,
     ggmcmc,
     GGally,
-    fdasrvf
 RoxygenNote: 7.3.2

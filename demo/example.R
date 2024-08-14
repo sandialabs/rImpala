@@ -82,10 +82,10 @@ legend(
 )
 
 # fit emulator ------------------------------------------------------------
-emu_ftilde = bassPCA(x_train, t(ftilde_train), n.pc = 4)
+emu_ftilde = mvBayes(BASS::bass, x_train, t(ftilde_train), nBasis = 4)
 plot(emu_ftilde)
 
-emu_vv = bassPCA(x_train, t(vv_train), n.pc = 4)
+emu_vv = mvBayes(BASS::bass, x_train, t(vv_train), nBasis = 4)
 plot(emu_vv)
 
 # impala ------------------------------------------------------------------
