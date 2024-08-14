@@ -1,7 +1,8 @@
+library(impala)
 library(BASS)
+library(mvBayes)
 library(fdasrvf)
 library(coda)
-library(impala)
 library(GGally)
 library(ggmcmc)
 
@@ -97,8 +98,8 @@ bounds[['theta2']] = c(0, 1)
 
 setup = CalibSetup(bounds, cf_bounds)
 
-model_ftilde = ModelBassPca_func(emu_ftilde, input_names)
-model_vv = ModelBassPca_func(emu_vv, input_names)
+model_ftilde = ModelmvBayes(emu_ftilde, input_names)
+model_vv = ModelmvBayes(emu_vv, input_names)
 
 setup = addVecExperiments(setup, t(ftilde_obs), model_ftilde, 0.01, 20, rep(1, nt))
 setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))

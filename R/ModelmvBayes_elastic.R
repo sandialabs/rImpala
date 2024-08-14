@@ -23,7 +23,7 @@ ModelmvBayes_elastic <- function(bmod,
                                  exp_ind = NULL,
                                  s2 = 'MH',
                                  h = FALSE) {
-  npc = ncol(bmod$dat$basis)
+  npc = bmod$basisInfo$nBasis
   nmcmc = length(bmod$bmList[[1]]$s2)
 
   if (s2 == 'gibbs') {
@@ -45,10 +45,10 @@ ModelmvBayes_elastic <- function(bmod,
     nmcmc = nmcmc,
     input_names = input_names,
     basis = bmod$basisInfo$basis,
-    meas_error_corr = diag(ncol(bmod$basisInfo$basis)),
-    discrep_cov = diag(ncol(bmod$basisInfo$basis)) * 1e-12,
+    meas_error_corr = diag(nrow(bmod$basisInfo$basis)),
+    discrep_cov = diag(nrow(bmod$basisInfo$basis)) * 1e-12,
     ii = 1,
-    trunc_error_var = cov(t(bmod$basisInfo$truncError)),
+    trunc_error_var = cov(bmod$basisInfo$truncError),
     mod_s2 = mod_s2,
     emu_vars = mod_s2[1, ],
     yobs = NULL,
@@ -121,8 +121,8 @@ llik.ModelmvBayes_elastic <- function(obj, yobs, pred, cov) {
 #' @export
 lik_cov_inv.ModelmvBayes_elastic <- function(obj, s2vec) {
   N = length(s2vec)
-  Sigma = cor2cov(obj$meas_error_cor[1:n, 1:n], sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_cov + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars) %*% t(obj$basis)
+  Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
+  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
   inv = solve(mat)
