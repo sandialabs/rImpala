@@ -20,7 +20,7 @@
 #' @export
 #'
 ModelmvBayes_elastic <- function(bmod,
-								 bmod_warp,
+                                 bmod_warp,
                                  input_names,
                                  exp_ind = NULL,
                                  s2 = 'MH',
@@ -43,7 +43,7 @@ ModelmvBayes_elastic <- function(bmod,
 
   obj <- list(
     model = bmod,
-	model_warp = bmod_warp,
+    model_warp = bmod_warp,
     stochastic = TRUE,
     nmcmc = nmcmc,
     input_names = input_names,
@@ -64,7 +64,7 @@ ModelmvBayes_elastic <- function(bmod,
     exp_ind = exp_ind,
     nexp = max(exp_ind),
     s2 = s2,
-	h = h
+    h = h
   )
 
   class(obj) <- "ModelmvBayes_elastic"
@@ -106,20 +106,20 @@ evalm.ModelmvBayes_elastic <- function(obj,
                     parmat_array,
                     mcmc.use = obj$ii,
                     nugget = nugget)
-	predv = predict(obj$model_warp,
+    predv = predict(obj$model_warp,
                     parmat_array,
                     mcmc.use = obj$ii,
                     nugget = nugget)
-	if (obj$h){
-		gam = h_to_gam(t(predv[1,,]))
-	} else{
-		gam = v_to_gam(t(predv[1,,]))
-	}
-	
-	pred = predf
-	for (i in 1:nrow(predf)){
-		pred[i,] = warp_f_gamma(predf[1,i,], seq(0, 1, length.out(nrow(gam)), gam[,i]))
-	}
+    if (obj$h) {
+      gam = fdasrvf::h_to_gam(t(predv[1, , ]))
+    } else{
+      gam = fdasrvf::v_to_gam(t(predv[1, , ]))
+    }
+
+    pred = predf
+    for (i in 1:nrow(predf)) {
+      pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out(nrow(gam)), gam[, i]))
+    }
   } else{
     cli::cli_abort("Not Implemented")
   }
