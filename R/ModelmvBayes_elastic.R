@@ -8,7 +8,8 @@
 #'
 #' This function setups up emulator object.
 #'
-#' @param bmod: a object of the type `mvBayes`
+#' @param bmod: a object of the type `mvBayes` of aligned functions
+#' @param bmod_warp: a object of the type `mvBayes` of warping functions
 #' @param input_names: cell array of strings of input variable names
 #' @param exp_ind: experiment indices (default: NULL)
 #' @param s2: how to sample error variance (default: 'MH')
@@ -19,6 +20,7 @@
 #' @export
 #'
 ModelmvBayes_elastic <- function(bmod,
+								 bmod_warp,
                                  input_names,
                                  exp_ind = NULL,
                                  s2 = 'MH',
@@ -41,6 +43,7 @@ ModelmvBayes_elastic <- function(bmod,
 
   obj <- list(
     model = bmod,
+	model_warp = bmod_warp,
     stochastic = TRUE,
     nmcmc = nmcmc,
     input_names = input_names,
@@ -48,7 +51,7 @@ ModelmvBayes_elastic <- function(bmod,
     meas_error_corr = diag(nrow(bmod$basisInfo$basis)),
     discrep_cov = diag(nrow(bmod$basisInfo$basis)) * 1e-12,
     ii = 1,
-    trunc_error_var = cov(bmod$basisInfo$truncError),
+    trunc_error_var = cov(bmod$basisInfo$truncError) + cov(bmod_warp$basisInfo$truncError),
     mod_s2 = mod_s2,
     emu_vars = mod_s2[1, ],
     yobs = NULL,
@@ -60,7 +63,8 @@ ModelmvBayes_elastic <- function(bmod,
     discrep = 0,
     exp_ind = exp_ind,
     nexp = max(exp_ind),
-    s2 = s2
+    s2 = s2,
+	h = h
   )
 
   class(obj) <- "ModelmvBayes_elastic"
@@ -98,15 +102,29 @@ evalm.ModelmvBayes_elastic <- function(obj,
   }
 
   if (pool) {
-    pred = predict(obj$model,
-                   parmat_array,
-                   mcmc.use = obj$ii,
-                   nugget = nugget)
+    predf = predict(obj$model,
+                    parmat_array,
+                    mcmc.use = obj$ii,
+                    nugget = nugget)
+	predv = predict(obj$model_warp,
+                    parmat_array,
+                    mcmc.use = obj$ii,
+                    nugget = nugget)
+	if (obj$h){
+		gam = h_to_gam(t(predv[1,,]))
+	} else{
+		gam = v_to_gam(t(predv[1,,]))
+	}
+	
+	pred = predf
+	for (i in 1:nrow(predf)){
+		pred[i,] = warp_f_gamma(predf[1,i,], seq(0, 1, length.out(nrow(gam)), gam[,i]))
+	}
   } else{
     cli::cli_abort("Not Implemented")
   }
 
-  pred[1, , ]
+  pred
 }
 
 
