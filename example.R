@@ -1,5 +1,8 @@
 library(BASS)
 library(fdasrvf)
+library(coda)
+library(GGally)
+library(ggmcmc)
 
 source("addVecExperiments.R")
 source("AMcov_pool.R")
@@ -33,7 +36,7 @@ for (i in 1:1000) {
   y_test[i, ] = f(x_test[i, ])
 }
 
-# generate obs
+# generate obs ------------------------------------------------------------
 x_true = c(0.1028, 0.4930)
 ftilde_obs = f(x_true)
 gam_obs = seq(0, 1, length.out = nt)
@@ -87,15 +90,14 @@ legend(
   lty = 1
 )
 
-
-# fit emulator
+# fit emulator ------------------------------------------------------------
 emu_ftilde = bassPCA(x_train, t(ftilde_train), n.pc = 4)
 plot(emu_ftilde)
 
 emu_vv = bassPCA(x_train, t(vv_train), n.pc = 4)
 plot(emu_vv)
 
-# impala
+# impala ------------------------------------------------------------------
 input_names = c("theta0", "theta1", "theta2")
 bounds = list()
 bounds[['theta0']] = c(0, 1)
@@ -112,3 +114,147 @@ setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))
 setup = setTemperatureLadder(setup, 1.05 ^ (0:3))
 setup = setMCMC(setup, 4000, 2000, 1, 10)
 out_cal = calibPool(setup)
+
+
+# plots -------------------------------------------------------------------
+uu = seq(2500, 4000, 2)
+theta = tran_unif(out$theta[uu, 1, ], setup$bounds_mat, names(setup$bounds))
+expnums = 1
+
+cnt = 1
+ftilde_pred_obs = vector(mode = "list", length = setup$nexp)
+gam_pred_obs = vector(mode = "list", length = setup$nexp)
+median_pred = matrix(0, nt, length(expnums))
+for (idx in expnums) {
+  time_new = seq(0, 1, length.out = nt)
+  
+  ftilde_pred_obs[[idx]] = eval(setup$models[[cnt]], theta)
+  vv_pred_obs = eval(setup$models[[cnt + 1]], theta)
+  cnt = cnt + 2
+  gam_pred_obs[[idx]] = v_to_gam(t(vv_pred_obs))
+  
+  # compute median of posterior prediction
+  obj1 = time_warping(t(ftilde_pred_obs[[idx]]),
+                      time_new,
+                      centroid_type = "median",
+                      parallel = TRUE)
+  fmedian = apply(obj1$fn, 1, median)
+  
+  obj1 = SqrtMedian(gam_pred_obs[[idx]])
+  gam_median = obj1$gam_median
+  
+  median_pred[, idx] = warp_f_gamma(fmedian, time_new, invertGamma(gam_median))
+  
+  matplot(
+    time_new,
+    ftilde_train,
+    type = "l",
+    col = "gray",
+    lty = 1
+  )
+  matplot(
+    time_new,
+    t(ftilde_pred_obs[[idx]]),
+    type = "l",
+    col = "lightblue",
+    lty = 1,
+    add = TRUE
+  )
+  lines(time_new, ftilde_obs, col = "black")
+  legend(
+    x = 0,
+    y = 8,
+    legend = c("simulation", "prediction", "experiment"),
+    col = c("gray", "lightblue", "black"),
+    lty = 1
+  )
+  
+  matplot(
+    time_new,
+    vv_train,
+    type = "l",
+    col = "gray",
+    lty = 1
+  )
+  matplot(
+    time_new,
+    t(vv_pred_obs),
+    type = "l",
+    col = "lightblue",
+    lty = 1,
+    add = TRUE
+  )
+  lines(time_new, vv_obs, col = "black")
+  legend(
+    x = 0,
+    y = 8,
+    legend = c("simulation", "prediction", "experiment"),
+    col = c("gray", "lightblue", "black"),
+    lty = 1
+  )
+  
+  matplot(
+    time_new,
+    gam_train,
+    type = "l",
+    col = "gray",
+    lty = 1
+  )
+  matplot(
+    time_new,
+    gam_pred_obs[[idx]],
+    type = "l",
+    col = "lightblue",
+    lty = 1,
+    add = TRUE
+  )
+  lines(time_new, gam_obs, col = "black")
+  legend(
+    x = 0,
+    y = 8,
+    legend = c("simulation", "prediction", "experiment"),
+    col = c("gray", "lightblue", "black"),
+    lty = 1
+  )
+}
+
+samps = ggs(mcmc(data.frame(theta)))
+ggs_pairs(
+  samps,
+  lower = list(continuous = "density"),
+  upper = list(continuous = wrap("points", alpha = 0.2))
+)
+
+# misaligned prediction
+for (idx in expnums){
+  obspred = matrix(0, nt, length(uu))
+  for (j in 1:length(uu)){
+    obspred[,j] = warp_f_gamma(ftilde_pred_obs[[idx]][j,], time_new, invertGamma(gam_pred_obs[[idx]][,j]))
+  }
+
+  matplot(
+    time_new,
+    t(y_train),
+    type = "l",
+    col = "gray",
+    lty = 1
+  )
+  matplot(
+    time_new,
+    obspred,
+    type = "l",
+    col = "lightblue",
+    lty = 1,
+    add = TRUE
+  )
+  lines(time_new, ftilde_obs, col = "black")
+  legend(
+    x = 0,
+    y = 8,
+    legend = c("simulation", "prediction", "experiment"),
+    col = c("gray", "lightblue", "black"),
+    lty = 1
+  )
+
+}
+
