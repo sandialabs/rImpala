@@ -60,7 +60,7 @@ unnormalize <- function(z, bounds) {
   out
 }
 
-
+#' @export
 tran_unif <- function(th, bounds, names) {
   out = list()
   tbounds = unnormalize(th, bounds)
