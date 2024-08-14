@@ -6,12 +6,14 @@
 #'
 #' @return An object of class `CalibSetup`
 #'
+#' @export
+#'
 setTemperatureLadder <- function(obj, temperature_ladder, start_temper = 1000) {
   obj$tl = temperature_ladder
   obj$itl = 1 / obj$tl
   obj$ntemps = length(obj$tl)
   obj$nswap_per = floor(obj$ntemps / 2)
   obj$start_temper = start_temper
-  
+
   obj
 }

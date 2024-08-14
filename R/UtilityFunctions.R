@@ -1,5 +1,3 @@
-library(einsum)
-
 ndims <- function(x){
   return(length(dim(x)))
 }
@@ -42,7 +40,7 @@ cf_bounds <- function(x, bounds) {
     good = good * (x[[k[i]]] < bounds[[k[i]]][2]) * (x[[k[i]]] > bounds[[k[i]]][1])
   }
   good = as.logical(good)
-  
+
   good
 }
 

@@ -13,6 +13,8 @@
 #'                          (default: 300)
 #' @return An object of class `CalibSetup`
 #'
+#' @export
+#'
 setMCMC <- function(obj,
                     nmcmc,
                     nburn = 0,
@@ -32,6 +34,6 @@ setMCMC <- function(obj,
   obj$start_var_ls2 = start_var_ls2
   obj$start_tau_ls2 = start_tau_ls2
   obj$start_adapt_iter = start_adapt_iter
-  
+
   obj
 }

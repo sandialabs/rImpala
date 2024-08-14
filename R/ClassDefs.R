@@ -3,6 +3,7 @@ llik <- function(obj, ...) {
 }
 
 
+#' @export
 llik.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
@@ -28,32 +29,32 @@ discrep_sample.default <- function(obj, ...) {
 }
 
 
-step <- function(obj, ...) {
-  UseMethod("step")
+step_m <- function(obj, ...) {
+  UseMethod("step_m")
 }
 
-
-step.default <- function(obj, ...) {
+#' @export
+step_m.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
 
 
-eval <- function(obj, ...) {
-  UseMethod("eval")
+eval_m <- function(obj, ...) {
+  UseMethod("eval_m")
 }
 
-
-eval.default <- function(obj, ...) {
+#' @export
+eval_m.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
 
 
-update <- function(obj, ...) {
-  UseMethod("update")
+update_m <- function(obj, ...) {
+  UseMethod("update_m")
 }
 
-
-update.default <- function(obj, ...) {
+#' @export
+update_m.default <- function(obj, ...) {
   cat("This is a generic function\n")
 }
 

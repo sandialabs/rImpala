@@ -9,33 +9,35 @@
 #'
 #' @return An object of class `ModelBassPca_func`
 #'
+#' @export
+#'
 ModelBassPca_func <- function(bmod,
                               input_names,
                               exp_ind = NULL,
                               s2 = 'MH') {
   npc = ncol(bmod$dat$basis)
   nmcmc = length(bmod$mod.list[[1]]$s2)
-  
+
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
   }
-  
+
   if (is.null(exp_ind)) {
     exp_ind = 1
   }
-  
+
   if (npc > 1) {
     trunc_error_var = diag(cov(t(bmod$dat$trunc.error)))
   } else {
     # need to check this
     trunc_error_var = diag(cov(t(bmod$dat$trunc.error)))[1]
   }
-  
+
   mod_s2 = matrix(0, nrow = nmcmc, npc)
   for (i in 1:npc) {
     mod_s2[, i] = bmod$mod.list[[i]]$s2
   }
-  
+
   obj <- list(
     model = bmod,
     stochastic = TRUE,
@@ -59,20 +61,22 @@ ModelBassPca_func <- function(bmod,
     nexp = max(exp_ind),
     s2 = s2
   )
-  
+
   class(obj) <- "ModelBassPca_func"
-  
+
   obj
 }
 
 
-step.ModelBassPca_func <- function(obj) {
+#' @export
+step_m.ModelBassPca_func <- function(obj) {
   obj$ii = sample(obj$nmcmc, 1)
   obj$emu_vars = obj$mod_s2[obj$ii, ]
   obj
 }
 
 
+#' @export
 discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
@@ -81,7 +85,8 @@ discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp) {
 }
 
 
-eval.ModelBassPca_func <- function(obj,
+#' @export
+eval_m.ModelBassPca_func <- function(obj,
                                    parmat,
                                    pool = TRUE,
                                    nugget = FALSE) {
@@ -90,7 +95,7 @@ eval.ModelBassPca_func <- function(obj,
   for (i in 1:length(fn)) {
     parmat_array[, i] = parmat[[fn[i]]]
   }
-  
+
   if (pool) {
     pred = predict(obj$model,
                    parmat_array,
@@ -99,11 +104,12 @@ eval.ModelBassPca_func <- function(obj,
   } else{
     cli::cli_abort("Not Implemented")
   }
-  
+
   pred[1, , ]
 }
 
 
+#' @export
 llik.ModelBassPca_func <- function(obj, yobs, pred, cov) {
   vec = c(yobs - pred)
   out = -0.5 * (cov$ldet + t(vec) %*% cov$inv %*% vec)
@@ -111,6 +117,7 @@ llik.ModelBassPca_func <- function(obj, yobs, pred, cov) {
 }
 
 
+#' @export
 lik_cov_inv.ModelBassPca_func <- function(obj, s2vec) {
   vec = obj$trunc_error_var + s2vec
   Ainv = diag(1 / vec)

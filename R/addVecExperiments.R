@@ -16,6 +16,8 @@
 #'
 #' @return An object of class `CalibSetup`
 #'
+#' @export
+#'
 addVecExperiments <- function(obj,
                               yobs,
                               model,
@@ -27,38 +29,38 @@ addVecExperiments <- function(obj,
                               D = NULL,
                               discrep_tau = 1) {
   N = length(obj$ys)
-  
+
   if (is.null(theta_ind)) {
     theta_ind = rep(0, length(yobs))
   }
-  
+
   vec = rep(0, length(sd_est))
   for (i in 1:length(vec)) {
     vec[i] = sum(s2_ind == i)
   }
-  
+
   if (is.null(D)) {
     nd = 0
   } else {
     nd = ncol(D)
   }
-  
+
   model$exp_ind = theta_ind
   model$yobs = yobs
   if (!is.null(meas_error_cor)) {
     model$meas_error_cor = meas_error_cor
   }
-  
+
   if (!is.null(D)) {
     model$D = D
     model$nd = nd
     model$discrep_tau = discrep_tau
   }
-  
-  
+
+
   obj$ntheta = c(obj$ntheta, length(unique(theta_ind)))
   obj$nclustmax = max(sum(obj$ntheta), 10)
-  
+
   if (N == 0) {
     obj$ys = list(yobs)
     obj$y_lens = length(yobs)
@@ -96,9 +98,9 @@ addVecExperiments <- function(obj,
       obj$s2_prior_kern[[N + 1]] = ldig_kern
     }
   }
-  
+
   obj$nexp = obj$nexp + 1
-  
+
   obj
-  
+
 }

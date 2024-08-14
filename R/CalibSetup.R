@@ -15,6 +15,7 @@
 #' - `nexp`: number of experiments
 #'
 #' @export
+#'
 
 CalibSetup <- function(bounds, constraint_func) {
   fn = names(bounds)
@@ -22,7 +23,7 @@ CalibSetup <- function(bounds, constraint_func) {
   for (i in 1:length(bounds)) {
     bmattmp[i, ] = bounds[[fn[i]]]
   }
-  
+
   out <- list(
     nexp = 0,
     ys = NULL,
@@ -54,8 +55,8 @@ CalibSetup <- function(bounds, constraint_func) {
     nswap = 5,
     s2_prior_kern = NULL
   )
-  
+
   class(out) <- "CalibSetup"
-  
+
   out
 }
