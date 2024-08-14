@@ -1,18 +1,9 @@
 library(BASS)
 library(fdasrvf)
 library(coda)
+library(impala)
 library(GGally)
 library(ggmcmc)
-
-source("addVecExperiments.R")
-source("AMcov_pool.R")
-source("calibPool.R")
-source("CalibSetup.R")
-source("ModelBassPca_func.R")
-source("setMCMC.R")
-source("setTemperatureLadder.R")
-source("UtilityFunctions.R")
-source("ClassDefs.R")
 
 # generate functions
 f <- function(x) {
@@ -127,24 +118,24 @@ gam_pred_obs = vector(mode = "list", length = setup$nexp)
 median_pred = matrix(0, nt, length(expnums))
 for (idx in expnums) {
   time_new = seq(0, 1, length.out = nt)
-  
+
   ftilde_pred_obs[[idx]] = eval(setup$models[[cnt]], theta)
   vv_pred_obs = eval(setup$models[[cnt + 1]], theta)
   cnt = cnt + 2
   gam_pred_obs[[idx]] = v_to_gam(t(vv_pred_obs))
-  
+
   # compute median of posterior prediction
   obj1 = time_warping(t(ftilde_pred_obs[[idx]]),
                       time_new,
                       centroid_type = "median",
                       parallel = TRUE)
   fmedian = apply(obj1$fn, 1, median)
-  
+
   obj1 = SqrtMedian(gam_pred_obs[[idx]])
   gam_median = obj1$gam_median
-  
+
   median_pred[, idx] = warp_f_gamma(fmedian, time_new, invertGamma(gam_median))
-  
+
   matplot(
     time_new,
     ftilde_train,
@@ -168,7 +159,7 @@ for (idx in expnums) {
     col = c("gray", "lightblue", "black"),
     lty = 1
   )
-  
+
   matplot(
     time_new,
     vv_train,
@@ -192,7 +183,7 @@ for (idx in expnums) {
     col = c("gray", "lightblue", "black"),
     lty = 1
   )
-  
+
   matplot(
     time_new,
     gam_train,
