@@ -32,7 +32,7 @@ chol_solve <- function(x) {
   out
 }
 
-
+#' @export
 cf_bounds <- function(x, bounds) {
   k = names(bounds)
   good = x[[k[1]]] < bounds[[k[1]]][2]
@@ -76,12 +76,12 @@ cov_3d_pcm <- function(arr, mean) {
   if (ndims(arr) == 3){
     meantmp = replicate(N, mean, simplify="array")
     meantmp = aperm(meantmp, c(3,1,2))
-    out = einsum('kij,kil->ijl', arr - meantmp, arr - meantmp) / (N - 1)
+    out = einsum::einsum('kij,kil->ijl', arr - meantmp, arr - meantmp) / (N - 1)
   } else if (ndims(arr) == 2){
     meantmp = replicate(N, mean, simplify="array")
     meantmp = aperm(meantmp, c(2,1))
     tmp = array(arr - meantmp, dim=c(nrow(arr), ncol(arr),1))
-    out = einsum('kij,kil->ijl', tmp, tmp) / (N - 1)
+    out = einsum::einsum('kij,kil->ijl', tmp, tmp) / (N - 1)
     out = out[,,1]
   }
   out

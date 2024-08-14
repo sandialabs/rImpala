@@ -112,7 +112,7 @@ calibPool <- function(setup) {
   llik = rep(0, setup$nmcmc)
 
   # start MCMC
-  pb <- progress_bar$new(
+  pb <- progress::progress_bar$new(
     format = "  MCMC [:bar] :percent in :elapsed",
     total = setup$nmcmc,
     clear = FALSE,

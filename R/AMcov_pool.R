@@ -33,20 +33,20 @@ update_m.AMcov_pool <- function(obj, x, m) {
     tmp = x[m - 1, , ] - obj$mu
     if (ndims(tmp) == 0){
       tmp = matrix(tmp)
-      a = ((m - 1) / (m * m)) * einsum('ti,tj->tij', tmp , tmp)
+      a = ((m - 1) / (m * m)) * einsum::einsum('ti,tj->tij', tmp , tmp)
       obj$cov = ((m - 1) / m) * obj$cov  + matrix(a[,,1])
     } else {
-      obj$cov = (((m-1)/m) * obj$cov  + ((m-1)/(m*m)) * einsum('ti,tj->tij', tmp , tmp))
+      obj$cov = (((m-1)/m) * obj$cov  + ((m-1)/(m*m)) * einsum::einsum('ti,tj->tij', tmp , tmp))
     }
 
     eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify="array")
     if (obj$p == 1){
       eyetmp = matrix(eyetmp)
       tmp = array(obj$cov + eyetmp * obj$eps, dim=c(nrow(eyetmp),1,1))
-      obj$S  = obj$AM_SCALAR * einsum('ijk,i->ijk', tmp, exp(obj$tau))
+      obj$S  = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', tmp, exp(obj$tau))
     } else {
       eyetmp = aperm(eyetmp, c(3,1,2))
-      obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
+      obj$S   = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
     }
 
   } else if (m == obj$start_adapt_iter) {
@@ -56,10 +56,10 @@ update_m.AMcov_pool <- function(obj, x, m) {
     if (obj$p == 1){
       eyetmp = matrix(eyetmp)
       tmp = array(obj$cov + eyetmp * obj$eps, dim=c(length(eyetmp),1,1))
-      obj$S  = obj$AM_SCALAR * einsum('ijk,i->ijk', tmp, exp(obj$tau))
+      obj$S  = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', tmp, exp(obj$tau))
     } else {
       eyetmp = aperm(eyetmp, c(3,1,2))
-      obj$S   = obj$AM_SCALAR * einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
+      obj$S   = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
     }
   }
   obj
@@ -85,6 +85,6 @@ gen_cand.AMcov_pool <- function(obj, x, m) {
     tmpchol[i, , ] = t(chol(obj$S[i, , ]))
   }
   tmp = matrix(rnorm(obj$ntemps * obj$p), obj$ntemps)
-  x_cand = x[m - 1, , ] + einsum('ijk,ik->ij', tmpchol, tmp)
+  x_cand = x[m - 1, , ] + einsum::einsum('ijk,ik->ij', tmpchol, tmp)
   x_cand
 }
