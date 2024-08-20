@@ -5,10 +5,19 @@
 \title{mvBayes Emulator for Functional Outputs (can use different
 BASS/BPPR type emulators)}
 \usage{
-ModelmvBayes_elastic(bmod, input_names, exp_ind = NULL, s2 = "MH", h = FALSE)
+ModelmvBayes_elastic(
+  bmod,
+  bmod_warp,
+  input_names,
+  exp_ind = NULL,
+  s2 = "MH",
+  h = FALSE
+)
 }
 \arguments{
-\item{bmod:}{a object of the type `mvBayes`}
+\item{bmod:}{a object of the type `mvBayes` of aligned functions}
+
+\item{bmod_warp:}{a object of the type `mvBayes` of warping functions}
 
 \item{input_names:}{cell array of strings of input variable names}
 
