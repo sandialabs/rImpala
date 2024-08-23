@@ -51,17 +51,21 @@ cf_bounds <- function(x, bounds) {
 
 
 normalize <- function(x, bounds) {
-  mtmp = bounds[, 1]
+  m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
+  diff_tmp = t(replicate(nrow(x),diff))
+  mtmp = t(replicate(nrow(x),m))
   out = (x - mtmp) / diff
   out
 }
 
 
 unnormalize <- function(z, bounds) {
-  mtmp = bounds[, 1]
+  m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
-  out = z * diff + mtmp
+  diff_tmp = t(replicate(nrow(z),diff))
+  mtmp = t(replicate(nrow(z),m))
+  out = z * diff_tmp + mtmp
   out
 }
 
