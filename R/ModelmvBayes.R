@@ -81,7 +81,7 @@ step_m.ModelmvBayes <- function(obj) {
 discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S) %*% m, S / itemp)
+  discrep_vars = chol_sample(solve(S,m), S / itemp)
   discrep_vars
 }
 
@@ -125,7 +125,7 @@ lik_cov_inv.ModelmvBayes <- function(obj, s2vec) {
   mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
-  inv = solve(mat)
+  inv = chol2inv(chol)
   out = list(inv = inv, ldet = ldet)
   out
 }
