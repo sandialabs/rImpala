@@ -56,7 +56,7 @@ ModelmvBayes_GP <- function(bmod,
     D = NULL,
     discrep = 0,
     exp_ind = exp_ind,
-    nexp = max(exp_ind),
+    nexp = max(exp_ind)
   )
 
   class(obj) <- "ModelmvBayes_GP"
