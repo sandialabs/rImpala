@@ -93,9 +93,7 @@ evalm.ModelmvBayes_GP <- function(obj,
 
   if (pool) {
     pred = predict(obj$model,
-                   parmat_array,
-                   mcmc.use = obj$ii,
-                   nugget = nugget)
+                   parmat_array)
   } else{
     cli::cli_abort("Not Implemented")
   }
