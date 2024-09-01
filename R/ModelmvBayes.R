@@ -36,7 +36,12 @@ ModelmvBayes <- function(bmod,
 
   mod_s2 = matrix(0, nrow = nmcmc, npc)
   for (i in 1:npc) {
-    mod_s2[, i] = bmod$bmList[[i]]$s2
+    if (class(bmod$bmList[[i]]=="bppr")){
+      mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
+    } else {
+      mod_s2[, i] = bmod$bmList[[i]]$s2
+    }
+
   }
 
   obj <- list(
