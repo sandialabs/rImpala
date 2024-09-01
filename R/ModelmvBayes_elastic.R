@@ -26,7 +26,11 @@ ModelmvBayes_elastic <- function(bmod,
                                  s2 = 'MH',
                                  h = FALSE) {
   npc = bmod$basisInfo$nBasis
-  nmcmc = length(bmod$bmList[[1]]$s2)
+  if (class(bmod$bmList[[1]])=="bppr"){
+    nmcmc = length(bmod$bmList[[1]]$sd_resid)
+  } else {
+    nmcmc = length(bmod$bmList[[1]]$s2)
+  }
 
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
@@ -38,7 +42,11 @@ ModelmvBayes_elastic <- function(bmod,
 
   mod_s2 = matrix(0, nrow = nmcmc, npc)
   for (i in 1:npc) {
-    mod_s2[, i] = bmod$bmList[[i]]$s2
+    if (class(bmod$bmList[[i]])=="bppr"){
+      mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
+    } else {
+      mod_s2[, i] = bmod$bmList[[i]]$s2
+    }
   }
 
   obj <- list(
