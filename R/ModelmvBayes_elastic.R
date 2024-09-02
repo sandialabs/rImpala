@@ -111,12 +111,12 @@ evalm.ModelmvBayes_elastic <- function(obj,
 
   if (pool) {
     if (class(obj$model$bmList[[1]])=="bppr"){
-    predf = predict(obj$model,
-                    parmat_array,
-                    idx_use = obj$ii)
-    predv = predict(obj$model_warp,
-                    parmat_array,
-                    idx_use = obj$ii)
+      predf = predict(obj$model,
+                      parmat_array,
+                      idx_use = obj$ii)
+      predv = predict(obj$model_warp,
+                      parmat_array,
+                      idx_use = obj$ii)
     } else {
       predf = predict(obj$model,
                       parmat_array,
@@ -133,7 +133,7 @@ evalm.ModelmvBayes_elastic <- function(obj,
       gam = fdasrvf::v_to_gam(t(predv[1, , ]))
     }
 
-    pred = predf
+    pred = predf[1, , ]
     for (i in 1:ncol(gam)) {
       pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
     }
