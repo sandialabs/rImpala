@@ -108,10 +108,18 @@ evalm.ModelmvBayes <- function(obj,
   }
 
   if (pool) {
-    pred = predict(obj$model,
-                   parmat_array,
-                   mcmc.use = obj$ii,
-                   nugget = nugget)
+    if (class(obj$model$bmList[[1]])=="bppr"){
+      pred = predict(obj$model,
+                     parmat_array,
+                     idx_use = obj$ii)
+    } else {
+      pred = predict(obj$model,
+                     parmat_array,
+                     mcmc.use = obj$ii,
+                     nugget = nugget)
+    }
+
+
   } else{
     cli::cli_abort("Not Implemented")
   }
