@@ -173,7 +173,7 @@ lik_cov_inv.ModelmvBayes_elastic <- function(obj, s2vec) {
   mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
-  inv = solve(mat)
+  inv = chol2inv(mat)
   out = list(inv = inv, ldet = ldet)
   out
 }
