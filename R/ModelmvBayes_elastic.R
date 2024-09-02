@@ -93,7 +93,7 @@ step_m.ModelmvBayes_elastic <- function(obj) {
 discrep_sample.ModelmvBayes_elastic <- function(obj, yobs, pred, cov, itemp) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S) %*% m, S / itemp)
+  discrep_vars = chol_sample(solve(S, m), S / itemp)
   discrep_vars
 }
 
@@ -127,13 +127,26 @@ evalm.ModelmvBayes_elastic <- function(obj,
                       mcmc.use = obj$ii,
                       nugget = nugget)
     }
-    if (obj$h) {
-      gam = fdasrvf::h_to_gam(t(predv[1, , ]))
-    } else{
-      gam = fdasrvf::v_to_gam(t(predv[1, , ]))
+
+    if (dim(predf)[2] == 1){
+      if (obj$h) {
+        gam = fdasrvf::h_to_gam(t(t(predv[1, , ])))
+      } else{
+        gam = fdasrvf::v_to_gam(t(t(predv[1, , ])))
+      }
+
+      pred = t(predf[1, , ])
+
+    } else {
+      if (obj$h) {
+        gam = fdasrvf::h_to_gam(t(predv[1, , ]))
+      } else{
+        gam = fdasrvf::v_to_gam(t(predv[1, , ]))
+      }
+
+      pred = predf[1, , ]
     }
 
-    pred = predf[1, , ]
     for (i in 1:ncol(gam)) {
       pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
     }
