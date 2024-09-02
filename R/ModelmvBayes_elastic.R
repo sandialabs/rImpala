@@ -134,7 +134,7 @@ evalm.ModelmvBayes_elastic <- function(obj,
     }
 
     pred = predf
-    for (i in 1:nrow(predf)) {
+    for (i in 1:ncol(gam)) {
       pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
     }
   } else{
