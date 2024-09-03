@@ -130,12 +130,13 @@ evalm.ModelmvBayes_elastic <- function(obj,
 
     if (dim(predf)[2] == 1){
       if (obj$h) {
-        gam = fdasrvf::h_to_gam(t(t(predv[1, , ])))
+        gam = fdasrvf::h_to_gam(predv[1, , ])
       } else{
-        gam = fdasrvf::v_to_gam(t(t(predv[1, , ])))
+        gam = fdasrvf::v_to_gam(predv[1, , ])
       }
 
-      pred = t(predf[1, , ])
+      M = dim(predf)[3]
+      pred = fdasrvf::warp_f_gamma(predf[1, , ], seq(0, 1, length.out=M), invertGamma(gam))
 
     } else {
       if (obj$h) {
@@ -145,11 +146,13 @@ evalm.ModelmvBayes_elastic <- function(obj,
       }
 
       pred = predf[1, , ]
+
+      for (i in 1:ncol(gam)) {
+        pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
+      }
     }
 
-    for (i in 1:ncol(gam)) {
-      pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
-    }
+    
   } else{
     cli::cli_abort("Not Implemented")
   }
