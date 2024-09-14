@@ -315,7 +315,7 @@ calibPool <- function(setup) {
         sw = t(sw)
 
         sw_alpha = rep(0, setup$nswap_per)
-        sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ]]) - colSums(llik_curr[, sw[2, ]]))
+        sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ], drop = FALSE]) - colSums(llik_curr[, sw[2, ], drop = FALSE]))
         for (i in 1:setup$nexp) {
           sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
             (rowSums(matrix(
