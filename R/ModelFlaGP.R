@@ -1,19 +1,19 @@
-#' mvBayes Emulator for Functional Outputs (GP)
+#' FlaGP Emulator for Functional Outputs (GP)
 #'
-#' ModelmvBayes Handles larger-dimensional functional responses (e.g., on
+#' ModelFlaGP Handles larger-dimensional functional responses (e.g., on
 #' large spatial fields) using various inversion tricks. We require any
 #' other covariance e.g., from discrepancy, measurement error, and basis
 #' truncation error) to be diagonal
 #'
 #' This function setups up emulator object.
 #'
-#' @param bmod: a object of the type `mvBayes`
+#' @param bmod: a object of the type `flagp`
 #' @param input_names: cell array of strings of input variable names
 #' @param exp_ind: experiment indices (default: NULL)
 #' @param s2: how to sample error variance (default: 'MH')
 #' @param h: h representation of warping function (default: FALSE)
 #'
-#' @return An object of class `ModelmvBayes`
+#' @return An object of class `ModelFlaGP`
 #'
 #' @export
 #'

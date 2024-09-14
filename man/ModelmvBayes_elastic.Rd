@@ -2,7 +2,7 @@
 % Please edit documentation in R/ModelmvBayes_elastic.R
 \name{ModelmvBayes_elastic}
 \alias{ModelmvBayes_elastic}
-\title{mvBayes Emulator for Functional Outputs (can use different
+\title{mvBayes elastic Emulator for Functional Outputs (can use different
 BASS/BPPR type emulators)}
 \usage{
 ModelmvBayes_elastic(
@@ -31,10 +31,10 @@ ModelmvBayes_elastic(
 An object of class `ModelmvBayes_elastic`
 }
 \description{
-ModelmvBayes Handles larger-dimensional functional responses (e.g., on
+ModelmvBayes_elastic Handles larger-dimensional functional responses (e.g., on
 large spatial fields) using various inversion tricks. We require any
 other covariance e.g., from discrepancy, measurement error, and basis
-truncation error) to be diagonal
+truncation error) to be diagonal. Contains a change on the likelihood
 }
 \details{
 This function setups up emulator object.

@@ -2,12 +2,12 @@
 % Please edit documentation in R/ModelFlaGP.R
 \name{ModelFlaGP}
 \alias{ModelFlaGP}
-\title{mvBayes Emulator for Functional Outputs (GP)}
+\title{FlaGP Emulator for Functional Outputs (GP)}
 \usage{
 ModelFlaGP(bmod, input_names, exp_ind = NULL, s2 = "MH", h = FALSE)
 }
 \arguments{
-\item{bmod:}{a object of the type `mvBayes`}
+\item{bmod:}{a object of the type `flagp`}
 
 \item{input_names:}{cell array of strings of input variable names}
 
@@ -18,10 +18,10 @@ ModelFlaGP(bmod, input_names, exp_ind = NULL, s2 = "MH", h = FALSE)
 \item{h:}{h representation of warping function (default: FALSE)}
 }
 \value{
-An object of class `ModelmvBayes`
+An object of class `ModelFlaGP`
 }
 \description{
-ModelmvBayes Handles larger-dimensional functional responses (e.g., on
+ModelFlaGP Handles larger-dimensional functional responses (e.g., on
 large spatial fields) using various inversion tricks. We require any
 other covariance e.g., from discrepancy, measurement error, and basis
 truncation error) to be diagonal

@@ -3,16 +3,15 @@
 #' @param obj: CalibSetup Object
 #' @param yobs: a vector of the experiment or observation
 #' @param model: emulator (currently expecting a object of class
-#'               ModelBassPca_func, ModelBassPca_func_mf, or
-#'               ModelBpprPca_func
+#'                         ModelBassPca_func or ModelmvBayes)
 #' @param sd_est: estimate of standard deviation
 #' @param s2_df: degrees of freedom of inverse gamma prior
 #' @param s2_ind: indices of function
 #' @param meas_error_cor: measurement error correlation (default: NULL)
 #' @param theta_ind: indices of theta (default: NULL)
-#' @param D: discrepency basis (matrix of columns of basis, default:
+#' @param D: discrepancy basis (matrix of columns of basis, default:
 #'           NaN)
-#' @param discrep_tau: discrepency sampling tau
+#' @param discrep_tau: discrepancy sampling tau
 #'
 #' @return An object of class `CalibSetup`
 #'

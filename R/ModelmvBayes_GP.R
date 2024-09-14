@@ -1,9 +1,9 @@
 #' mvBayes Emulator for Functional Outputs (GP)
 #'
-#' ModelmvBayes Handles larger-dimensional functional responses (e.g., on
+#' ModelmvBayes_GP Handles larger-dimensional functional responses (e.g., on
 #' large spatial fields) using various inversion tricks. We require any
 #' other covariance e.g., from discrepancy, measurement error, and basis
-#' truncation error) to be diagonal
+#' truncation error) to be diagonal. Built for a GP emulator.
 #'
 #' This function setups up emulator object.
 #'
@@ -13,7 +13,7 @@
 #' @param s2: how to sample error variance (default: 'MH')
 #' @param h: h representation of warping function (default: FALSE)
 #'
-#' @return An object of class `ModelmvBayes`
+#' @return An object of class `ModelmvBayes_GP`
 #'
 #' @export
 #'

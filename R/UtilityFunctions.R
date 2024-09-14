@@ -37,6 +37,7 @@ chol_solve <- function(x) {
   out
 }
 
+
 #' @export
 cf_bounds <- function(x, bounds) {
   k = names(bounds)
@@ -68,6 +69,7 @@ unnormalize <- function(z, bounds) {
   out = z * diff_tmp + mtmp
   out
 }
+
 
 #' @export
 tran_unif <- function(th, bounds, names) {

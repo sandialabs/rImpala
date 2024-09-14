@@ -2,8 +2,7 @@ library(impala)
 library(BASS)
 library(mvBayes)
 library(fdasrvf)
-library(coda)
-library(GGally)
+library(bayesplot)
 library(ggmcmc)
 
 # generate functions
@@ -119,6 +118,12 @@ gam_pred_obs = vector(mode = "list", length = setup$nexp)
 for (idx in expnums) {
   time_new = seq(0, 1, length.out = nt)
 
+  fn = setup$models[[1]]$input_names
+  parmat_array = matrix(0, length(theta[[fn[1]]]), length(fn))
+  for (i in 1:length(fn)) {
+    parmat_array[, i] = theta[[fn[i]]]
+  }
+
   ftilde_pred_obs[[idx]] = evalm(setup$models[[cnt]], theta)
   vv_pred_obs = evalm(setup$models[[cnt + 1]], theta)
   cnt = cnt + 2
@@ -197,12 +202,14 @@ for (idx in expnums) {
   )
 }
 
-samps = ggs(mcmc(data.frame(theta)))
-ggs_pairs(
-  samps,
-  lower = list(continuous = "density"),
-  upper = list(continuous = wrap("points", alpha = 0.2))
-)
+samps = data.frame(theta)
+mcmc_pairs(samps, off_diag_fun="hex", diag_fun = "dens")
+
+mcmc_hist(samps)
+
+mcmc_trace(samps)
+
+plot(out_cal$llik, type="l", main="Log-Likelihood")
 
 # misaligned prediction
 for (idx in expnums){

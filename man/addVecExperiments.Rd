@@ -23,8 +23,7 @@ addVecExperiments(
 \item{yobs:}{a vector of the experiment or observation}
 
 \item{model:}{emulator (currently expecting a object of class
-ModelBassPca_func, ModelBassPca_func_mf, or
-ModelBpprPca_func}
+ModelBassPca_func or ModelmvBayes)}
 
 \item{sd_est:}{estimate of standard deviation}
 
@@ -36,10 +35,10 @@ ModelBpprPca_func}
 
 \item{theta_ind:}{indices of theta (default: NULL)}
 
-\item{D:}{discrepency basis (matrix of columns of basis, default:
+\item{D:}{discrepancy basis (matrix of columns of basis, default:
 NaN)}
 
-\item{discrep_tau:}{discrepency sampling tau}
+\item{discrep_tau:}{discrepancy sampling tau}
 }
 \value{
 An object of class `CalibSetup`
