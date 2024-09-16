@@ -1,6 +1,7 @@
 library(impala)
 library(BASS)
 library(mvBayes)
+# library(scaledVecchia)
 library(fdasrvf)
 library(bayesplot)
 library(ggmcmc)
@@ -8,7 +9,7 @@ library(ggmcmc)
 # generate functions
 f <- function(x) {
   dnorm(seq(0, 1, length.out = 99),
-        sin(2 * pi * x[1] ^ 2) / 4 - sqrt(x[1] * x[1]) / 10 + 0.5,
+        sin(2 * pi * x[1] ^ 2) / 4 - x[1] / 10 + 0.5,
         0.05) * x[2]
 }
 
@@ -28,7 +29,7 @@ for (i in 1:1000) {
 }
 
 # generate obs ------------------------------------------------------------
-x_true = c(0.1028, 0.4930)
+x_true = c(0.1028, 0.5930)
 ftilde_obs = f(x_true)
 gam_obs = seq(0, 1, length.out = nt)
 vv_obs = gam_to_v(gam_obs)
@@ -39,7 +40,6 @@ gam_train = out$warping_functions
 vv_train = gam_to_v(gam_train)
 ftilde_train = out$fn
 qtilde_train = out$qn
-ftilde_obs = rowMeans(out$fn)
 
 matplot(tt, t(y_train), type = "l", col = "gray")
 lines(tt, ftilde_obs, col = "black")
@@ -82,10 +82,10 @@ legend(
 )
 
 # fit emulator ------------------------------------------------------------
-emu_ftilde = mvBayes(BASS::bass, x_train, t(ftilde_train), nBasis = 4)
+emu_ftilde = mvBayes(bass, x_train, t(ftilde_train), nBasis=2)
 plot(emu_ftilde)
 
-emu_vv = mvBayes(BASS::bass, x_train, t(vv_train), nBasis = 4)
+emu_vv = mvBayes(bass, x_train, t(vv_train), nBasis=2)
 plot(emu_vv)
 
 # impala ------------------------------------------------------------------
@@ -105,7 +105,6 @@ setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))
 setup = setTemperatureLadder(setup, 1.05 ^ (0:3))
 setup = setMCMC(setup, 4000, 2000, 1, 10)
 out_cal = calibPool(setup)
-
 
 # plots -------------------------------------------------------------------
 uu = seq(2500, 4000, 2)
