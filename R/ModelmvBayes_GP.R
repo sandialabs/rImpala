@@ -35,8 +35,7 @@ ModelmvBayes_GP <- function(bmod,
   emu_vars = rep(NA, npc)
   N = length(bmod$bmList[[1]]$covparms)
   for (ii in 1:npc){
-    tmp = predict(bmod$bmList[[ii]], bmod$bmList[[ii]]$locs, joint=FALSE, predvar=TRUE)
-    emu_vars[ii] = mean(tmp$vars)
+    emu_vars[ii] = bmod$bmList[[ii]]$s2
   }
 
   obj <- list(
@@ -95,7 +94,8 @@ evalm.ModelmvBayes_GP <- function(obj,
 
   if (pool) {
     pred = predict(obj$model,
-                   parmat_array)
+                   parmat_array,
+                   nsims=1)
   } else{
     cli::cli_abort("Not Implemented")
   }
