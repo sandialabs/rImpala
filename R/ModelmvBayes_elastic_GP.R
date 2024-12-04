@@ -39,7 +39,8 @@ ModelmvBayes_elastic_GP <- function(bmod,
   emu_vars = rep(NA, npc)
   N = length(bmod$bmList[[1]]$covparms)
   for (ii in 1:npc){
-    emu_vars[ii] = bmod$bmList[[ii]]$s2
+    tmp = predict(bmod$bmList[[ii]], bmod$bmList[[ii]]$locs, joint=FALSE, predvar=TRUE)
+    emu_vars[ii] = mean(tmp$vars)
   }
 
   obj <- list(
@@ -99,11 +100,9 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
 
   if (pool) {
       predf = predict(obj$model,
-                      parmat_array,
-                      nsims=1)
+                      parmat_array)
       predv = predict(obj$model_warp,
-                      parmat_array,
-                      nsims=1)
+                      parmat_array)
 
     if (dim(predf)[2] == 1){
       if (obj$h) {
