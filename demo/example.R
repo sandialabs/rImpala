@@ -4,6 +4,7 @@ library(mvBayes)
 # library(scaledVecchia)
 library(fdasrvf)
 library(bayesplot)
+library(ggmcmc)
 
 # generate functions
 f <- function(x) {
