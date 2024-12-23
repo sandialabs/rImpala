@@ -24,7 +24,7 @@ ModelmvBayes <- function(bmod,
                          s2 = 'MH',
                          h = FALSE) {
   npc = bmod$basisInfo$nBasis
-  if (class(bmod$bmList[[1]])=="bppr"){
+  if (class(bmod$bmList[[1]])[1]=="bppr"){
     nmcmc = length(bmod$bmList[[1]]$sd_resid)
   } else {
     nmcmc = length(bmod$bmList[[1]]$s2)
@@ -41,7 +41,7 @@ ModelmvBayes <- function(bmod,
 
   mod_s2 = matrix(0, nrow = nmcmc, npc)
   for (i in 1:npc) {
-    if (class(bmod$bmList[[i]])=="bppr"){
+    if (class(bmod$bmList[[i]])[1]=="bppr"){
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
     } else {
       mod_s2[, i] = bmod$bmList[[i]]$s2

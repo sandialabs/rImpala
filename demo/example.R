@@ -1,7 +1,7 @@
 library(impala)
-library(BASS)
+library(GBASS)
 library(mvBayes)
-# library(scaledVecchia)
+library(scaledVecchia)
 library(fdasrvf)
 library(bayesplot)
 
@@ -81,10 +81,10 @@ legend(
 )
 
 # fit emulator ------------------------------------------------------------
-emu_ftilde = mvBayes(bass, x_train, t(ftilde_train), nBasis=2)
+emu_ftilde = mvBayes(tbass, x_train, t(ftilde_train), nBasis=2)
 plot(emu_ftilde)
 
-emu_vv = mvBayes(bass, x_train, t(vv_train), nBasis=2)
+emu_vv = mvBayes(tbass, x_train, t(vv_train), nBasis=2)
 plot(emu_vv)
 
 # impala ------------------------------------------------------------------
