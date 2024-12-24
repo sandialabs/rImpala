@@ -47,7 +47,15 @@ ModelmvBayes <- function(bmod,
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
     } else if (class(bmod$bmList[[i]])[1]=="wbart"){
       mod_s2[, i] = tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
-    }else {
+    } else if (class(bmod$bmList[[i]])[1] %in% c("gbass",
+                                                "tbass",
+                                                "qbass",
+                                                "nwbass")){
+      w <- bmod$bmList[[i]]$w
+      beta <- bmod$bmList[[i]]$beta
+      v <- bmod$bmList[[i]]$v
+      mod_s2[, i] = w*rowMeans(v)
+    } else {
       mod_s2[, i] = bmod$bmList[[i]]$s2
     }
 
@@ -120,6 +128,13 @@ evalm.ModelmvBayes <- function(obj,
       pred = suppressMessages(predict(obj$model,
                      parmat_array,mc.cores=parallel::detectCores()-1))
       pred = pred[obj$ii,,,drop = F]
+    } else if (class(obj$model$bmList[[1]])[1] %in% c("gbass",
+                                                      "tbass",
+                                                      "qbass",
+                                                      "nwbass")){
+      pred = predict(obj$model,
+                     parmat_array,
+                     mcmc.use = obj$ii)
     } else {
       pred = predict(obj$model,
                      parmat_array,
