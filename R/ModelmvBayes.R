@@ -26,6 +26,8 @@ ModelmvBayes <- function(bmod,
   npc = bmod$basisInfo$nBasis
   if (class(bmod$bmList[[1]])[1]=="bppr"){
     nmcmc = length(bmod$bmList[[1]]$sd_resid)
+  } else if  (class(bmod$bmList[[1]])[1]=="wbart") {
+    nmcmc = nrow(bmod$bmList[[1]]$varprob)
   } else {
     nmcmc = length(bmod$bmList[[1]]$s2)
   }
@@ -43,7 +45,9 @@ ModelmvBayes <- function(bmod,
   for (i in 1:npc) {
     if (class(bmod$bmList[[i]])[1]=="bppr"){
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
-    } else {
+    } else if (class(bmod$bmList[[i]])[1]=="wbart"){
+      mod_s2[, i] = tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
+    }else {
       mod_s2[, i] = bmod$bmList[[i]]$s2
     }
 
@@ -108,10 +112,14 @@ evalm.ModelmvBayes <- function(obj,
   }
 
   if (pool) {
-    if (class(obj$model$bmList[[1]])=="bppr"){
+    if (class(obj$model$bmList[[1]])[1]=="bppr"){
       pred = predict(obj$model,
                      parmat_array,
                      idx_use = obj$ii)
+    } else if (class(obj$model$bmList[[1]])[1]=="wbart") {
+      pred = suppressMessages(predict(obj$model,
+                     parmat_array,mc.cores=parallel::detectCores()-1))
+      pred = pred[obj$ii,,,drop = F]
     } else {
       pred = predict(obj$model,
                      parmat_array,
