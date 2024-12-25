@@ -26,8 +26,10 @@ ModelmvBayes <- function(bmod,
   npc = bmod$basisInfo$nBasis
   if (class(bmod$bmList[[1]])[1]=="bppr"){
     nmcmc = length(bmod$bmList[[1]]$sd_resid)
-  } else if  (class(bmod$bmList[[1]])[1]=="wbart") {
+  } else if (class(bmod$bmList[[1]])[1]=="wbart") {
     nmcmc = nrow(bmod$bmList[[1]]$varprob)
+  } else if (class(bmod$bmList[[1]])[1]=="bartmodel") {
+    nmcmc = length(bmod$bmList[[1]]$sigma2_global_samples)
   } else {
     nmcmc = length(bmod$bmList[[1]]$s2)
   }
@@ -47,6 +49,8 @@ ModelmvBayes <- function(bmod,
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
     } else if (class(bmod$bmList[[i]])[1]=="wbart"){
       mod_s2[, i] = tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
+    } else if (class(bmod$bmList[[1]])[1]=="bartmodel") {
+      mod_s2[, i] = bmod$bmList[[i]]$sigma2_global_samples
     } else if (class(bmod$bmList[[i]])[1] %in% c("gbass",
                                                 "tbass",
                                                 "qbass",
@@ -127,6 +131,9 @@ evalm.ModelmvBayes <- function(obj,
     } else if (class(obj$model$bmList[[1]])[1]=="wbart") {
       pred = suppressMessages(predict(obj$model,
                      parmat_array,mc.cores=parallel::detectCores()-1))
+      pred = pred[obj$ii,,,drop = F]
+    } else if (class(obj$model$bmList[[1]])[1]=="bartmodel") {
+      pred = predict(obj$model, parmat_array)
       pred = pred[obj$ii,,,drop = F]
     } else if (class(obj$model$bmList[[1]])[1] %in% c("gbass",
                                                       "tbass",
