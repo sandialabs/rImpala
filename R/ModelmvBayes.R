@@ -70,6 +70,7 @@ ModelmvBayes <- function(bmod,
     stochastic = TRUE,
     nmcmc = nmcmc,
     input_names = input_names,
+    npc = npc,
     basis = bmod$basisInfo$basis,
     meas_error_corr = diag(nrow(bmod$basisInfo$basis)),
     discrep_cov = diag(nrow(bmod$basisInfo$basis)) * 1e-12,
@@ -170,7 +171,7 @@ llik.ModelmvBayes <- function(obj, yobs, pred, cov) {
 lik_cov_inv.ModelmvBayes <- function(obj, s2vec) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars) %*% t(obj$basis)
+  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow=obj$npc) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
   inv = chol2inv(chol)
