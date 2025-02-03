@@ -43,6 +43,7 @@ ModelBassPca_func <- function(bmod,
     stochastic = TRUE,
     nmcmc = length(bmod$mod.list[[1]]$s2),
     input_names = input_names,
+    npc = npc,
     basis = bmod$dat$basis,
     meas_error_corr = diag(nrow(bmod$dat$basis)),
     discrep_cov = diag(nrow(bmod$dat$basis)) * 1e-12,
@@ -124,7 +125,7 @@ lik_cov_inv.ModelBassPca_func <- function(obj, s2vec) {
   Aldet = sum(log(vec))
   out = swm(Ainv,
             obj$basis,
-            diag(1 / obj$emu_vars),
+            diag(1 / obj$emu_vars, nrow=obj$npc),
             t(obj$basis),
             Aldet,
             sum(log(obj$emu_vars)))
