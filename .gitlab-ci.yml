@@ -17,7 +17,7 @@ R:
     - apt-get install -y -f libssl-dev libfontconfig1-dev libxml2-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev
     - R -e 'install.packages(c("progress", "einsum", "remotes"),repos = "http://cran.us.r-project.org")'
     - R -e 'remotes::install_github("gqcollins/BayesPPR",repos = "http://cran.us.r-project.org")'
-    - R -e 'remotes::install_git("https://cee-gitlab.sandia.gov/statistics/mvBayes.git", subdir="mvBayesR",repos = "http://cran.us.r-project.org")"'
+    - R -e 'remotes::install_git("https://cee-gitlab.sandia.gov/statistics/mvBayes.git", subdir="mvBayesR",repos = "http://cran.us.r-project.org")'
     - R CMD build . --no-build-vignettes --no-manual
     - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
     - R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
