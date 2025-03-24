@@ -8,7 +8,8 @@ R:
     - export https_proxy=http://proxy.sandia.gov:80
     - export _R_CHECK_FORCE_SUGGESTS_=0
     - wget --no-proxy https://cee-gitlab.sandia.gov/-/snippets/225/raw/master/install_certs.sh -O - | bash -
-    - apt-get update -qq && apt-get install -y -qq libssl-dev libfontconfig1-dev
+    - apt-get update
+    - apt-get install -y libssl-dev libfontconfig1-dev
     - R -e 'install.packages(c("BASS", "progress", "einsum", "fdasrvf", "devtools"))'
     - R -e 'devtools::install_github("gqcollins/BayesPPR")'
     - R -e 'devtools::install_git('https://cee-gitlab.sandia.gov/statistics/mvBayes.git', subdir='mvBayesR')"'
