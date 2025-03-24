@@ -2,7 +2,7 @@ workflow:
     name: impala
 
 R:
-  image: r-base:latest
+  image: rstudio/r-base:4.4.3-noble
   script:
     - export http_proxy=http://proxy.sandia.gov:80
     - export https_proxy=http://proxy.sandia.gov:80
