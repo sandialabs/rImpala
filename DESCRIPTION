@@ -16,8 +16,8 @@ Imports:
     methods,
     progress,
     einsum,
-    fdasrvf
 Suggests: 
+    fdasrvf,
     BASS,
     BayesPPR,
     mvBayes,
