@@ -18,6 +18,8 @@ setMCMC(
 )
 }
 \arguments{
+\item{obj}{`calibPool` object}
+
 \item{nmcmc}{number of mcmc iterations}
 
 \item{nburn}{number of mcmc burn in iterations (default: 0)}
@@ -36,8 +38,6 @@ setMCMC(
 
 \item{start_adapt_iter}{number of iterations before adaption
 (default: 300)}
-
-\item{`calibPool`}{object}
 }
 \value{
 An object of class `CalibSetup`

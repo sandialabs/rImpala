@@ -22,9 +22,12 @@ ModelmvBayes_GP <- function(bmod,
                             exp_ind = NULL,
                             s2 = 'MH',
                             h = FALSE) {
-
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
+  }
+  is_mvBayes_available <- requireNamespace("mvBayes", quietly = TRUE)
+  if (!is_mvBayes_available) {
+    stop('install mvBayes for this basis option')
   }
 
   if (is.null(exp_ind)) {
@@ -34,8 +37,11 @@ ModelmvBayes_GP <- function(bmod,
   npc = bmod$basisInfo$nBasis
   emu_vars = rep(NA, npc)
   N = length(bmod$bmList[[1]]$covparms)
-  for (ii in 1:npc){
-    tmp = mvBayes::predict(bmod$bmList[[ii]], bmod$bmList[[ii]]$locs, joint=FALSE, predvar=TRUE)
+  for (ii in 1:npc) {
+    tmp = stats::predict(bmod$bmList[[ii]],
+                         bmod$bmList[[ii]]$locs,
+                         joint = FALSE,
+                         predvar = TRUE)
     emu_vars[ii] = mean(tmp$vars)
   }
 
@@ -78,7 +84,7 @@ step_m.ModelmvBayes_GP <- function(obj, ...) {
 discrep_sample.ModelmvBayes_GP <- function(obj, yobs, pred, cov, itemp, ...) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S,m), S / itemp)
+  discrep_vars = chol_sample(solve(S, m), S / itemp)
   discrep_vars
 }
 
@@ -87,7 +93,8 @@ discrep_sample.ModelmvBayes_GP <- function(obj, yobs, pred, cov, itemp, ...) {
 evalm.ModelmvBayes_GP <- function(obj,
                                   parmat,
                                   pool = TRUE,
-                                  nugget = FALSE, ...) {
+                                  nugget = FALSE,
+                                  ...) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
@@ -95,8 +102,7 @@ evalm.ModelmvBayes_GP <- function(obj,
   }
 
   if (pool) {
-    pred = predict(obj$model,
-                   parmat_array)
+    pred = stats::predict(obj$model, parmat_array)
   } else{
     cli::cli_abort("Not Implemented")
   }
@@ -117,7 +123,8 @@ llik.ModelmvBayes_GP <- function(obj, yobs, pred, cov, ...) {
 lik_cov_inv.ModelmvBayes_GP <- function(obj, s2vec, ...) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow=obj$npc) %*% t(obj$basis)
+  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow =
+                                                                             obj$npc) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
   inv = chol2inv(chol)

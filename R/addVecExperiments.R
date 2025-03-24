@@ -70,7 +70,7 @@ addVecExperiments <- function(obj,
     obj$sd_est = list(sd_est)
     obj$s2_df = list(s2_df)
     obj$ig_a = list(s2_df / 2)
-    obj$ig_b = list(s2_df / 2 * sd_est ^ 2)
+    obj$ig_b = list(s2_df / 2 * sd_est^2)
     obj$s2_ind = list(s2_ind)
     obj$s2_exp_ind = list(1:length(sd_est))
     obj$ns2 = list(length(sd_est))
@@ -88,7 +88,7 @@ addVecExperiments <- function(obj,
     obj$sd_est[[N + 1]] = sd_est
     obj$s2_df[[N + 1]] = s2_df
     obj$ig_a[[N + 1]] = s2_df / 2
-    obj$ig_b[[N + 1]] = s2_df / 2 * sd_est ^ 2
+    obj$ig_b[[N + 1]] = s2_df / 2 * sd_est^2
     obj$s2_ind[[N + 1]] = s2_ind
     obj$s2_exp_ind[[N + 1]] = 1:length(sd_est)
     obj$ns2[[N + 1]] = length(sd_est)

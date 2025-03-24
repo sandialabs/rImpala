@@ -2,7 +2,7 @@
 #' @description This function setups up MCMC parameters for adaptive MCMC,
 #' also includes tempering and decorrelation steps
 #'
-#' @param `calibPool` object
+#' @param obj `calibPool` object
 #' @param nmcmc number of mcmc iterations
 #' @param nburn number of mcmc burn in iterations (default: 0)
 #' @param thin number of samples to thin (default: 1)

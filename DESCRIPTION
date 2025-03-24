@@ -11,16 +11,16 @@ Authors@R: c(
 Description: Performs Bayesian Model Calibration for emulator based models.
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 Imports:
     cli,
+    methods,
     progress,
     einsum,
-    mvBayes,
     fdasrvf
 Suggests: 
     BASS,
     BayesPPR,
+    mvBayes,
     FlaGP,
     coda,
     bayesplot

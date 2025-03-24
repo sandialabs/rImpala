@@ -62,8 +62,8 @@ calibPool <- function(setup) {
 
   for (i in 1:setup$nexp) {
     pred_curr[[i]] = evalm(setup$models[[i]],
-                          tran_unif(theta[1, , ], setup$bounds_mat, names(setup$bounds)),
-                          TRUE)
+                           tran_unif(theta[1, , ], setup$bounds_mat, names(setup$bounds)),
+                           TRUE)
 
     for (t in 1:setup$ntemps) {
       llik_curr[i, t] = llik(setup$models[[i]],
@@ -136,8 +136,8 @@ calibPool <- function(setup) {
       setup$models[[i]] = step_m(setup$models[[i]])
       if (setup$models[[i]]$stochastic) {
         pred_curr[[i]] = evalm(setup$models[[i]],
-                              tran_unif(theta[m, , ], setup$bounds_mat, names(setup$bounds)),
-                              TRUE)
+                               tran_unif(theta[m, , ], setup$bounds_mat, names(setup$bounds)),
+                               TRUE)
       }
       if ((setup$models[[i]]$nd > 0) |
           (setup$models[[i]]$stochastic)) {
@@ -168,8 +168,8 @@ calibPool <- function(setup) {
       for (i in 1:setup$nexp) {
         theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
         pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
-                                             tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
-                                             TRUE)
+                                              tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
+                                              TRUE)
         for (t in 1:setup$ntemps) {
           llik_cand[i, t] = llik(
             setup$models[[i]],
@@ -215,8 +215,8 @@ calibPool <- function(setup) {
           for (i in 1:setup$nexp) {
             theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
             pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
-                                                 tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
-                                                 TRUE)
+                                                  tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
+                                                  TRUE)
             for (t in 1:setup$ntemps) {
               llik_cand[i, t] = llik(
                 setup$models[[i]],
@@ -252,7 +252,7 @@ calibPool <- function(setup) {
     for (i in 1:setup$nexp) {
       if (setup$models[[i]]$s2 == 'gibbs') {
         # gibbs update s2
-        dev_sq = (pred_curr[[i]] - setup$ys[[i]]) ^ 2 %*% s2_ind_mat[[i]]
+        dev_sq = (pred_curr[[i]] - setup$ys[[i]])^2 %*% s2_ind_mat[[i]]
         log_s2[[i]][m, ] = log(1 / stats::rgamma(
           itl_mat[[i]] * (setup$ny_s2[[i]] / 2 + setup$ig_a[[i]] + 1) - 1,
           1 / (itl_mat[[i]] * (setup$ig_b[[i]] + dev_sq / 2))
@@ -326,9 +326,8 @@ calibPool <- function(setup) {
           if (setup$models[[i]]$nd > 0) {
             sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
               (
-                -0.5 * rowSums(discrep_vars[[i]][m, (sw[1, ])] ^ 2) / setup$models[[i]]$discrep_tau +
-                  0.5 * rowSums(discrep_vars[[i]][m, (sw[2, ])] ^
-                                  2) / setup$models[[i]]$discrep_tau
+                -0.5 * rowSums(discrep_vars[[i]][m, (sw[1, ])]^2) / setup$models[[i]]$discrep_tau +
+                  0.5 * rowSums(discrep_vars[[i]][m, (sw[2, ])]^2) / setup$models[[i]]$discrep_tau
               )
           }
         }

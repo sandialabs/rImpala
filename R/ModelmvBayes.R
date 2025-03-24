@@ -21,11 +21,15 @@ ModelmvBayes <- function(bmod,
                          s2 = 'MH',
                          h = FALSE) {
   npc = bmod$basisInfo$nBasis
-  if (class(bmod$bmList[[1]])[1]=="bppr"){
+  is_mvBayes_available <- requireNamespace("mvBayes", quietly = TRUE)
+  if (!is_mvBayes_available) {
+    stop('install mvBayes for this basis option')
+  }
+  if (class(bmod$bmList[[1]])[1] == "bppr") {
     nmcmc = length(bmod$bmList[[1]]$sd_resid)
-  } else if (class(bmod$bmList[[1]])[1]=="wbart") {
+  } else if (class(bmod$bmList[[1]])[1] == "wbart") {
     nmcmc = nrow(bmod$bmList[[1]]$varprob)
-  } else if (class(bmod$bmList[[1]])[1]=="bartmodel") {
+  } else if (class(bmod$bmList[[1]])[1] == "bartmodel") {
     nmcmc = length(bmod$bmList[[1]]$sigma2_global_samples)
   } else {
     nmcmc = length(bmod$bmList[[1]]$s2)
@@ -42,20 +46,17 @@ ModelmvBayes <- function(bmod,
 
   mod_s2 = matrix(0, nrow = nmcmc, npc)
   for (i in 1:npc) {
-    if (class(bmod$bmList[[i]])[1]=="bppr"){
+    if (class(bmod$bmList[[i]])[1] == "bppr") {
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
-    } else if (class(bmod$bmList[[i]])[1]=="wbart"){
-      mod_s2[, i] = utils::tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
-    } else if (class(bmod$bmList[[1]])[1]=="bartmodel") {
+    } else if (class(bmod$bmList[[i]])[1] == "wbart") {
+      mod_s2[, i] = utils::tail(bmod$bmList[[i]]$sigma^2, n = nmcmc)
+    } else if (class(bmod$bmList[[1]])[1] == "bartmodel") {
       mod_s2[, i] = bmod$bmList[[i]]$sigma2_global_samples
-    } else if (class(bmod$bmList[[i]])[1] %in% c("gbass",
-                                                "tbass",
-                                                "qbass",
-                                                "nwbass")){
+    } else if (class(bmod$bmList[[i]])[1] %in% c("gbass", "tbass", "qbass", "nwbass")) {
       w <- bmod$bmList[[i]]$w
       beta <- bmod$bmList[[i]]$beta
       v <- bmod$bmList[[i]]$v
-      mod_s2[, i] = w*rowMeans(v)
+      mod_s2[, i] = w * rowMeans(v)
     } else {
       mod_s2[, i] = bmod$bmList[[i]]$s2
     }
@@ -105,7 +106,7 @@ step_m.ModelmvBayes <- function(obj, ...) {
 discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp, ...) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S,m), S / itemp)
+  discrep_vars = chol_sample(solve(S, m), S / itemp)
   discrep_vars
 }
 
@@ -114,7 +115,8 @@ discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp, ...) {
 evalm.ModelmvBayes <- function(obj,
                                parmat,
                                pool = TRUE,
-                               nugget = FALSE, ...) {
+                               nugget = FALSE,
+                               ...) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
@@ -122,29 +124,22 @@ evalm.ModelmvBayes <- function(obj,
   }
 
   if (pool) {
-    if (class(obj$model$bmList[[1]])[1]=="bppr"){
-      pred = predict(obj$model,
-                     parmat_array,
-                     idx_use = obj$ii)
-    } else if (class(obj$model$bmList[[1]])[1]=="wbart") {
-      pred = suppressMessages(predict(obj$model,
-                     parmat_array,mc.cores=parallel::detectCores()-1))
-      pred = pred[obj$ii,,,drop = F]
-    } else if (class(obj$model$bmList[[1]])[1]=="bartmodel") {
-      pred = predict(obj$model, parmat_array)
-      pred = pred[obj$ii,,,drop = F]
-    } else if (class(obj$model$bmList[[1]])[1] %in% c("gbass",
-                                                      "tbass",
-                                                      "qbass",
-                                                      "nwbass")){
-      pred = predict(obj$model,
-                     parmat_array,
-                     mcmc.use = obj$ii)
+    if (class(obj$model$bmList[[1]])[1] == "bppr") {
+      pred = stats::predict(obj$model, parmat_array, idx_use = obj$ii)
+    } else if (class(obj$model$bmList[[1]])[1] == "wbart") {
+      pred = suppressMessages(stats::predict(obj$model, parmat_array, mc.cores = parallel::detectCores() -
+                                               1))
+      pred = pred[obj$ii, , , drop = F]
+    } else if (class(obj$model$bmList[[1]])[1] == "bartmodel") {
+      pred =  stats::predict(obj$model, parmat_array)
+      pred = pred[obj$ii, , , drop = F]
+    } else if (class(obj$model$bmList[[1]])[1] %in% c("gbass", "tbass", "qbass", "nwbass")) {
+      pred =  stats::predict(obj$model, parmat_array, mcmc.use = obj$ii)
     } else {
-      pred = predict(obj$model,
-                     parmat_array,
-                     mcmc.use = obj$ii,
-                     nugget = nugget)
+      pred =  stats::predict(obj$model,
+                             parmat_array,
+                             mcmc.use = obj$ii,
+                             nugget = nugget)
     }
 
 
@@ -168,7 +163,8 @@ llik.ModelmvBayes <- function(obj, yobs, pred, cov, ...) {
 lik_cov_inv.ModelmvBayes <- function(obj, s2vec, ...) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow=obj$npc) %*% t(obj$basis)
+  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow =
+                                                                             obj$npc) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
   inv = chol2inv(chol)

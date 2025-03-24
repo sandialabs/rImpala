@@ -1,4 +1,4 @@
-ndims <- function(x){
+ndims <- function(x) {
   return(length(dim(x)))
 }
 
@@ -38,6 +38,13 @@ chol_solve <- function(x) {
 }
 
 
+chol_sample <- function(mean, cov) {
+  N = nrow(mean) * ncol(mean)
+  out = mean + t(chol(cov)) * matrix(stats::rnorm(N), nrow(mean), ncol(mean))
+  return(out)
+}
+
+
 #' @title Compare to bounds
 #' @description This function compares variables to bounds
 #'
@@ -61,8 +68,8 @@ cf_bounds <- function(x, bounds) {
 normalize <- function(x, bounds) {
   m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
-  diff_tmp = t(replicate(nrow(x),diff))
-  mtmp = t(replicate(nrow(x),m))
+  diff_tmp = t(replicate(nrow(x), diff))
+  mtmp = t(replicate(nrow(x), m))
   out = (x - mtmp) / diff
   out
 }
@@ -71,8 +78,8 @@ normalize <- function(x, bounds) {
 unnormalize <- function(z, bounds) {
   m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
-  diff_tmp = t(replicate(nrow(z),diff))
-  mtmp = t(replicate(nrow(z),m))
+  diff_tmp = t(replicate(nrow(z), diff))
+  mtmp = t(replicate(nrow(z), m))
   out = z * diff_tmp + mtmp
   out
 }
@@ -99,16 +106,16 @@ tran_unif <- function(th, bounds, names) {
 
 cov_3d_pcm <- function(arr, mean) {
   N = nrow(arr)
-  if (ndims(arr) == 3){
-    meantmp = replicate(N, mean, simplify="array")
-    meantmp = aperm(meantmp, c(3,1,2))
+  if (ndims(arr) == 3) {
+    meantmp = replicate(N, mean, simplify = "array")
+    meantmp = aperm(meantmp, c(3, 1, 2))
     out = einsum::einsum('kij,kil->ijl', arr - meantmp, arr - meantmp) / (N - 1)
-  } else if (ndims(arr) == 2){
-    meantmp = replicate(N, mean, simplify="array")
-    meantmp = aperm(meantmp, c(2,1))
-    tmp = array(arr - meantmp, dim=c(nrow(arr), ncol(arr),1))
+  } else if (ndims(arr) == 2) {
+    meantmp = replicate(N, mean, simplify = "array")
+    meantmp = aperm(meantmp, c(2, 1))
+    tmp = array(arr - meantmp, dim = c(nrow(arr), ncol(arr), 1))
     out = einsum::einsum('kij,kil->ijl', tmp, tmp) / (N - 1)
-    out = out[,,1]
+    out = out[, , 1]
   }
   out
 }

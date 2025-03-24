@@ -20,9 +20,13 @@ ModelFlaGP <- function(bmod,
                        exp_ind = NULL,
                        s2 = 'MH',
                        h = FALSE) {
-
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
+  }
+
+  is_FlaGP_available <- requireNamespace("FlaGP", quietly = TRUE)
+  if (!is_FlaGP_available) {
+    stop('install FlaGP for this basis option')
   }
 
   if (is.null(exp_ind)) {
@@ -31,7 +35,7 @@ ModelFlaGP <- function(bmod,
 
   npc = bmod$basis$sim$n.pc
   X.orig = bmod$XT.data$sim$X$orig
-  tmp1 = FLaGP::predict(bmod,X.pred.orig=X.orig,verbose=F)
+  tmp1 = stats::predict(bmod, X.pred.orig = X.orig, verbose = F)
   emu_vars = stats::var(t(tmp1$y.mean - bmod$Y.data$sim$orig))
   truncError = bmod$basis$sim$B %*% bmod$basis$sim$V.t -  bmod$Y.data$sim$trans
   trunc_error_var = stats::cov(t(truncError))
@@ -74,7 +78,7 @@ step_m.ModelFlaGP <- function(obj, ...) {
 discrep_sample.ModelFlaGP <- function(obj, yobs, pred, cov, itemp, ...) {
   S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
-  discrep_vars = chol_sample(solve(S,m), S / itemp)
+  discrep_vars = chol_sample(solve(S, m), S / itemp)
   discrep_vars
 }
 
@@ -92,9 +96,7 @@ evalm.ModelFlaGP <- function(obj,
   }
 
   if (pool) {
-    pred = predict(obj$model,
-                   X.pred.orig=parmat_array,
-                   verbose=F)$y.mean
+    pred = stats::predict(obj$model, X.pred.orig = parmat_array, verbose = F)$y.mean
   } else{
     cli::cli_abort("Not Implemented")
   }

@@ -25,6 +25,10 @@ ModelmvBayes_elastic_GP <- function(bmod,
                                     s2 = 'MH',
                                     h = FALSE) {
   npc = bmod$basisInfo$nBasis
+  is_mvBayes_available <- requireNamespace("mvBayes", quietly = TRUE)
+  if (!is_mvBayes_available) {
+    stop('install mvBayes for this basis option')
+  }
 
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
@@ -36,8 +40,11 @@ ModelmvBayes_elastic_GP <- function(bmod,
 
   emu_vars = rep(NA, npc)
   N = length(bmod$bmList[[1]]$covparms)
-  for (ii in 1:npc){
-    tmp = predict(bmod$bmList[[ii]], bmod$bmList[[ii]]$locs, joint=FALSE, predvar=TRUE)
+  for (ii in 1:npc) {
+    tmp = stats::predict(bmod$bmList[[ii]],
+                         bmod$bmList[[ii]]$locs,
+                         joint = FALSE,
+                         predvar = TRUE)
     emu_vars[ii] = mean(tmp$vars)
   }
 
@@ -90,7 +97,8 @@ discrep_sample.ModelmvBayes_elastic_GP <- function(obj, yobs, pred, cov, itemp, 
 evalm.ModelmvBayes_elastic_GP <- function(obj,
                                           parmat,
                                           pool = TRUE,
-                                          nugget = FALSE, ...) {
+                                          nugget = FALSE,
+                                          ...) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
@@ -98,12 +106,10 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
   }
 
   if (pool) {
-      predf = mvBayes::predict(obj$model,
-                      parmat_array)
-      predv = mvBayes::predict(obj$model_warp,
-                      parmat_array)
+    predf = stats::predict(obj$model, parmat_array)
+    predv = stats::predict(obj$model_warp, parmat_array)
 
-    if (dim(predf)[2] == 1){
+    if (dim(predf)[2] == 1) {
       if (obj$h) {
         gam = fdasrvf::h_to_gam(predv[1, , ])
       } else{
@@ -111,7 +117,9 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
       }
 
       M = dim(predf)[3]
-      pred = fdasrvf::warp_f_gamma(predf[1, , ], seq(0, 1, length.out=M), invertGamma(gam))
+      pred = fdasrvf::warp_f_gamma(predf[1, , ],
+                                   seq(0, 1, length.out = M),
+                                   fdasrvf::invertGamma(gam))
 
     } else {
       if (obj$h) {
@@ -123,7 +131,9 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
       pred = predf[1, , ]
 
       for (i in 1:ncol(gam)) {
-        pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ], seq(0, 1, length.out=nrow(gam)), invertGamma(gam[, i]))
+        pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ],
+                                          seq(0, 1, length.out = nrow(gam)),
+                                          fdasrvf::invertGamma(gam[, i]))
       }
     }
 
@@ -148,7 +158,8 @@ llik.ModelmvBayes_elastic_GP <- function(obj, yobs, pred, cov, ...) {
 lik_cov_inv.ModelmvBayes_elastic_GP <- function(obj, s2vec, ...) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow=obj$npc) %*% t(obj$basis)
+  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow =
+                                                                             obj$npc) %*% t(obj$basis)
   chol = chol(mat)
   ldet = 2 * sum(log(diag(chol)))
   inv = chol2inv(mat)
