@@ -4,6 +4,8 @@ workflow:
 R:
   image: r-base:latest
   script:
+    - apt update
+    - apt install libssl-dev libfontconfig1-dev
     - export http_proxy=http://proxy.sandia.gov:80
     - export https_proxy=http://proxy.sandia.gov:80
     - export _R_CHECK_FORCE_SUGGESTS_=0
