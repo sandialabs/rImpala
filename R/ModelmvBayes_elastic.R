@@ -30,6 +30,11 @@ ModelmvBayes_elastic <- function(bmod,
   if (!is_mvBayes_available) {
     stop('install mvBayes for this basis option')
   }
+  is_fdasrvf_available <- requireNamespace("fdasrvf", quietly = TRUE)
+  if (!is_fdasrvf_available) {
+    stop('install fdasrvf for this basis option')
+  }
+
   if (methods::is(bmod$bmList[[1]], "bppr")) {
     nmcmc = length(bmod$bmList[[1]]$sd_resid)
   } else {

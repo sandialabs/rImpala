@@ -29,6 +29,10 @@ ModelmvBayes_elastic_GP <- function(bmod,
   if (!is_mvBayes_available) {
     stop('install mvBayes for this basis option')
   }
+  is_fdasrvf_available <- requireNamespace("fdasrvf", quietly = TRUE)
+  if (!is_fdasrvf_available) {
+    stop('install fdasrvf for this basis option')
+  }
 
   if (s2 == 'gibbs') {
     cli::cli_abort("Cannot use Gibbs s2 for emulator models.")
