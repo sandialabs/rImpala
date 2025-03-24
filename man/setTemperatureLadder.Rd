@@ -2,16 +2,16 @@
 % Please edit documentation in R/setTemperatureLadder.R
 \name{setTemperatureLadder}
 \alias{setTemperatureLadder}
-\title{This function setups up temperature ladder for tempering}
+\title{Set Temperature Ladder}
 \usage{
 setTemperatureLadder(obj, temperature_ladder, start_temper = 1000)
 }
 \arguments{
-\item{obj:}{CalibSetup Object}
+\item{obj}{CalibSetup Object}
 
-\item{temperature_ladder:}{array of temperatures}
+\item{temperature_ladder}{array of temperatures}
 
-\item{start_temper:}{what MCMC sample to start tempering (default: 1000)}
+\item{start_temper}{what MCMC sample to start tempering (default: 1000)}
 }
 \value{
 An object of class `CalibSetup`

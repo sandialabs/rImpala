@@ -1,11 +1,10 @@
-#' Pooled Bayesian Model Calibration
+#' @title Pooled Bayesian Model Calibration
 #'
-#' This function setups up calibration object
-#'
-#' @param bounds: a list with fields of variable names with values of
+#' @description This function setups up calibration object
+#' @param bounds a list with fields of variable names with values of
 #'                two dimensional arrays where first element is lower bound
 #'                and second element is upper bound.
-#' @param constraint_func: function handle to constraint function on
+#' @param constraint_func function handle to constraint function on
 #'                         variables. Defaults to function on checking
 #'                         bounds
 #'

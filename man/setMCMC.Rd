@@ -2,8 +2,7 @@
 % Please edit documentation in R/setMCMC.R
 \name{setMCMC}
 \alias{setMCMC}
-\title{This function setups up MCMC parameters for adaptive MCMC,
-also includes tempering and decorrelation steps}
+\title{Set MCMC Parameters}
 \usage{
 setMCMC(
   obj,
@@ -19,24 +18,26 @@ setMCMC(
 )
 }
 \arguments{
-\item{nmcmc:}{number of mcmc iterations}
+\item{nmcmc}{number of mcmc iterations}
 
-\item{nburn:}{number of mcmc burn in iterations (default: 0)}
+\item{nburn}{number of mcmc burn in iterations (default: 0)}
 
-\item{thin:}{number of samples to thin (default: 1)}
+\item{thin}{number of samples to thin (default: 1)}
 
-\item{decor:}{number of mcmc iterations before decorrelation step (default: 100)}
+\item{decor}{number of mcmc iterations before decorrelation step (default: 100)}
 
-\item{start_var_theta:}{start variance of theta proposal (default: 1e-8)}
+\item{start_var_theta}{start variance of theta proposal (default: 1e-8)}
 
-\item{start_tau_theta:}{start tau of theta (default: 0)}
+\item{start_tau_theta}{start tau of theta (default: 0)}
 
-\item{start_var_ls2:}{start variance of sigma proposal (default: 1e-5)}
+\item{start_var_ls2}{start variance of sigma proposal (default: 1e-5)}
 
-\item{start_tau_ls2:}{start tau of sigma (default: 0)}
+\item{start_tau_ls2}{start tau of sigma (default: 0)}
 
-\item{start_adpat_iter:}{number of iterations before adaption
+\item{start_adapt_iter}{number of iterations before adaption
 (default: 300)}
+
+\item{`calibPool`}{object}
 }
 \value{
 An object of class `CalibSetup`

@@ -1,12 +1,11 @@
-#' This function runs pooled Bayesian Model Calibration with adaptive MCMC,
-#' tempering, and decorrelation steps
+#' @title Pool Calibration
 #'
-#' input theta will be normalized to 0-1 and sampled from uniform priors
+#' @description This function runs pooled Bayesian Model Calibration with adaptive MCMC,
+#' tempering, and decorrelation steps. input theta will be normalized to 0-1 and sampled from uniform priors
 #'
-#' @param setup: an object of class `CalibSetup`
+#' @param setup an object of class `CalibSetup`
 #'
 #' @return a list with the following elements
-#'
 #' - theta: mcmc samples of variables
 #' - s2: mcmc samples of error variance
 #' - count: number of counts of acceptance
@@ -31,13 +30,13 @@ calibPool <- function(setup) {
     s2_ind_mat[[i]] = setup$s2_ind[[i]] == 1:setup$ns2[[i]]
   }
 
-  theta_start = matrix(runif(setup$ntemps * setup$p), setup$ntemps)
+  theta_start = matrix(stats::runif(setup$ntemps * setup$p), setup$ntemps)
 
   good = setup$checkConstraints(tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)),
                                 setup$bounds)
 
   while (any(!good)) {
-    theta_start[!good, ] = matrix(runif(sum(!good) * setup$p), sum(!good))
+    theta_start[!good, ] = matrix(stats::runif(sum(!good) * setup$p), sum(!good))
     good[!good] = setup$checkConstraints(tran_unif(theta_start[!good, ], setup$bounds_mat, names(setup$bounds)),
                                          setup$bounds)
   }
@@ -187,7 +186,7 @@ calibPool <- function(setup) {
 
     alpha = rep(1, setup$ntemps) * -Inf
     alpha[good_values] = setup$itl[good_values] * llik_diff
-    idx = which(log(runif(setup$ntemps)) < alpha)
+    idx = which(log(stats::runif(setup$ntemps)) < alpha)
     for (t in idx) {
       theta[m, t, ] = theta_cand[t, ]
       count[t, t] = count[t, t] + 1
@@ -205,7 +204,7 @@ calibPool <- function(setup) {
     if (m %% setup$decor == 0) {
       for (k in 1:setup$p) {
         theta_cand = theta[m, , ]
-        theta_cand[, k] = runif(setup$ntemps)
+        theta_cand[, k] = stats::runif(setup$ntemps)
         good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
                                              setup$bounds)
         pred_cand = pred_curr
@@ -237,7 +236,7 @@ calibPool <- function(setup) {
 
         alpha[good_values] = setup$itl[good_values] * llik_diff
 
-        idx = which(log(runif(setup$ntemps)) < alpha)
+        idx = which(log(stats::runif(setup$ntemps)) < alpha)
         for (t in idx) {
           theta[m, t, k] = theta_cand[t, k]
           count_decor[k, t] = count_decor[k, t] + 1
@@ -254,7 +253,7 @@ calibPool <- function(setup) {
       if (setup$models[[i]]$s2 == 'gibbs') {
         # gibbs update s2
         dev_sq = (pred_curr[[i]] - setup$ys[[i]]) ^ 2 %*% s2_ind_mat[[i]]
-        log_s2[[i]][m, ] = log(1 / rgamma(
+        log_s2[[i]][m, ] = log(1 / stats::rgamma(
           itl_mat[[i]] * (setup$ny_s2[[i]] / 2 + setup$ig_a[[i]] + 1) - 1,
           1 / (itl_mat[[i]] * (setup$ig_b[[i]] + dev_sq / 2))
         ))
@@ -294,7 +293,7 @@ calibPool <- function(setup) {
         alpha_s2 = alpha_s2 - setup$itl * colSums(setup$s2_prior_kern[[i]](exp(t(log_s2[[i]][m - 1, , ])), setup$ig_a[[i]], setup$ig_b[[i]]))
         alpha_s2 = alpha_s2 - setup$itl * colSums(t(log_s2[[i]][m - 1, , ]))
 
-        idx = which(log(runif(setup$ntemps)) < alpha_s2)
+        idx = which(log(stats::runif(setup$ntemps)) < alpha_s2)
         for (t in idx) {
           count_s2[i, t] = count_s2[i, t] + 1
           llik_curr[i, t] = llik_candi[t]
@@ -334,7 +333,7 @@ calibPool <- function(setup) {
           }
         }
 
-        idx = which(log(runif(setup$nswap_per)) < sw_alpha)
+        idx = which(log(stats::runif(setup$nswap_per)) < sw_alpha)
 
         for (tti in idx) {
           tt = sw[, tti]

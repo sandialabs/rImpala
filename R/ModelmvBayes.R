@@ -1,18 +1,15 @@
-#' mvBayes Emulator for Functional Outputs (can use different
+#' @title mvBayes Emulator for Functional Outputs (can use different
 #' BASS/BPPR type emulators)
 #'
-#' ModelmvBayes Handles larger-dimensional functional responses (e.g., on
+#' @description ModelmvBayes Handles larger-dimensional functional responses (e.g., on
 #' large spatial fields) using various inversion tricks. We require any
 #' other covariance e.g., from discrepancy, measurement error, and basis
-#' truncation error) to be diagonal
-#'
-#' This function setups up emulator object.
-#'
-#' @param bmod: a object of the type `mvBayes`
-#' @param input_names: cell array of strings of input variable names
-#' @param exp_ind: experiment indices (default: NULL)
-#' @param s2: how to sample error variance (default: 'MH')
-#' @param h: h representation of warping function (default: FALSE)
+#' truncation error) to be diagonal. This function setups up emulator object.
+#' @param bmod a object of the type `mvBayes`
+#' @param input_names cell array of strings of input variable names
+#' @param exp_ind experiment indices (default: NULL)
+#' @param s2 how to sample error variance (default: 'MH')
+#' @param h h representation of warping function (default: FALSE)
 #'
 #' @return An object of class `ModelmvBayes`
 #'
@@ -48,7 +45,7 @@ ModelmvBayes <- function(bmod,
     if (class(bmod$bmList[[i]])[1]=="bppr"){
       mod_s2[, i] = bmod$bmList[[i]]$sd_resid^2
     } else if (class(bmod$bmList[[i]])[1]=="wbart"){
-      mod_s2[, i] = tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
+      mod_s2[, i] = utils::tail(bmod$bmList[[i]]$sigma^2, n=nmcmc)
     } else if (class(bmod$bmList[[1]])[1]=="bartmodel") {
       mod_s2[, i] = bmod$bmList[[i]]$sigma2_global_samples
     } else if (class(bmod$bmList[[i]])[1] %in% c("gbass",
@@ -75,7 +72,7 @@ ModelmvBayes <- function(bmod,
     meas_error_corr = diag(nrow(bmod$basisInfo$basis)),
     discrep_cov = diag(nrow(bmod$basisInfo$basis)) * 1e-12,
     ii = 1,
-    trunc_error_var = cov(bmod$basisInfo$truncError),
+    trunc_error_var = stats::cov(bmod$basisInfo$truncError),
     mod_s2 = mod_s2,
     emu_vars = mod_s2[1, ],
     yobs = NULL,
@@ -97,7 +94,7 @@ ModelmvBayes <- function(bmod,
 
 
 #' @export
-step_m.ModelmvBayes <- function(obj) {
+step_m.ModelmvBayes <- function(obj, ...) {
   obj$ii = sample(obj$nmcmc, 1)
   obj$emu_vars = obj$mod_s2[obj$ii, ]
   obj
@@ -105,8 +102,8 @@ step_m.ModelmvBayes <- function(obj) {
 
 
 #' @export
-discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp) {
-  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
+discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp, ...) {
+  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
   discrep_vars = chol_sample(solve(S,m), S / itemp)
   discrep_vars
@@ -117,7 +114,7 @@ discrep_sample.ModelmvBayes <- function(obj, yobs, pred, cov, itemp) {
 evalm.ModelmvBayes <- function(obj,
                                parmat,
                                pool = TRUE,
-                               nugget = FALSE) {
+                               nugget = FALSE, ...) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
@@ -160,7 +157,7 @@ evalm.ModelmvBayes <- function(obj,
 
 
 #' @export
-llik.ModelmvBayes <- function(obj, yobs, pred, cov) {
+llik.ModelmvBayes <- function(obj, yobs, pred, cov, ...) {
   vec = c(yobs - pred)
   out = -0.5 * (cov$ldet + t(vec) %*% cov$inv %*% vec)
   out
@@ -168,7 +165,7 @@ llik.ModelmvBayes <- function(obj, yobs, pred, cov) {
 
 
 #' @export
-lik_cov_inv.ModelmvBayes <- function(obj, s2vec) {
+lik_cov_inv.ModelmvBayes <- function(obj, s2vec, ...) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
   mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow=obj$npc) %*% t(obj$basis)

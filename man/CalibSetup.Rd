@@ -7,11 +7,11 @@
 CalibSetup(bounds, constraint_func)
 }
 \arguments{
-\item{bounds:}{a list with fields of variable names with values of
+\item{bounds}{a list with fields of variable names with values of
 two dimensional arrays where first element is lower bound
 and second element is upper bound.}
 
-\item{constraint_func:}{function handle to constraint function on
+\item{constraint_func}{function handle to constraint function on
 variables. Defaults to function on checking
 bounds}
 }

@@ -7,15 +7,15 @@
 ModelFlaGP(bmod, input_names, exp_ind = NULL, s2 = "MH", h = FALSE)
 }
 \arguments{
-\item{bmod:}{a object of the type `flagp`}
+\item{bmod}{a object of the type `flagp`}
 
-\item{input_names:}{cell array of strings of input variable names}
+\item{input_names}{cell array of strings of input variable names}
 
-\item{exp_ind:}{experiment indices (default: NULL)}
+\item{exp_ind}{experiment indices (default: NULL)}
 
-\item{s2:}{how to sample error variance (default: 'MH')}
+\item{s2}{how to sample error variance (default: 'MH')}
 
-\item{h:}{h representation of warping function (default: FALSE)}
+\item{h}{h representation of warping function (default: FALSE)}
 }
 \value{
 An object of class `ModelFlaGP`
@@ -24,8 +24,5 @@ An object of class `ModelFlaGP`
 ModelFlaGP Handles larger-dimensional functional responses (e.g., on
 large spatial fields) using various inversion tricks. We require any
 other covariance e.g., from discrepancy, measurement error, and basis
-truncation error) to be diagonal
-}
-\details{
-This function setups up emulator object.
+truncation error) to be diagonal. This function setups up emulator object.
 }

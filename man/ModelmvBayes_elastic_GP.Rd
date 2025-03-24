@@ -15,17 +15,17 @@ ModelmvBayes_elastic_GP(
 )
 }
 \arguments{
-\item{bmod:}{a object of the type `mvBayes` of aligned functions}
+\item{bmod}{a object of the type `mvBayes` of aligned functions}
 
-\item{bmod_warp:}{a object of the type `mvBayes` of warping functions}
+\item{bmod_warp}{a object of the type `mvBayes` of warping functions}
 
-\item{input_names:}{cell array of strings of input variable names}
+\item{input_names}{cell array of strings of input variable names}
 
-\item{exp_ind:}{experiment indices (default: NULL)}
+\item{exp_ind}{experiment indices (default: NULL)}
 
-\item{s2:}{how to sample error variance (default: 'MH')}
+\item{s2}{how to sample error variance (default: 'MH')}
 
-\item{h:}{h representation of warping function (default: FALSE)}
+\item{h}{h representation of warping function (default: FALSE)}
 }
 \value{
 An object of class `ModelmvBayes_elastic_GP`
@@ -35,8 +35,5 @@ mvBayes_elastic Handles larger-dimensional functional responses (e.g., on
 large spatial fields) using various inversion tricks. We require any
 other covariance e.g., from discrepancy, measurement error, and basis
 truncation error) to be diagonal. Contains a change on the likelihood
-and built for a GP emulator
-}
-\details{
-This function setups up emulator object.
+and built for a GP emulator. This function setups up emulator object.
 }

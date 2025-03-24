@@ -27,7 +27,7 @@ AMcov_pool <- function(ntemps,
 
 
 #' @export
-update_m.AMcov_pool <- function(obj, x, m) {
+update_m.AMcov_pool <- function(obj, x, m, ...) {
   if (m > obj$start_adapt_iter) {
     obj$mu = obj$mu + (x[m - 1, , ] - obj$mu) / m
     tmp = x[m - 1, , ] - obj$mu
@@ -67,7 +67,7 @@ update_m.AMcov_pool <- function(obj, x, m) {
 
 
 #' @export
-update_tau.AMcov_pool <- function(obj, m) {
+update_tau.AMcov_pool <- function(obj, m, ...) {
   if ((m %% 100 == 0) & (m > obj$start_adapt_iter)) {
     delta = min(0.5, 5 / sqrt(m + 1))
     obj$tau[obj$count_100 < 23] = obj$tau[obj$count_100 < 23] - delta
@@ -79,7 +79,7 @@ update_tau.AMcov_pool <- function(obj, m) {
 
 
 #' @export
-gen_cand.AMcov_pool <- function(obj, x, m) {
+gen_cand.AMcov_pool <- function(obj, x, m, ...) {
   tmpchol = array(0, dim = dim(obj$S))
   for (i in 1:dim(obj$S)[1]) {
     tmpchol[i, , ] = t(chol(obj$S[i, , ]))

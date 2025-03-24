@@ -1,17 +1,19 @@
-#' This method adds vector experiments to calibration object
+#' @title Add vector experiments
 #'
-#' @param obj: CalibSetup Object
-#' @param yobs: a vector of the experiment or observation
-#' @param model: emulator (currently expecting a object of class
-#'                         ModelBassPca_func or ModelmvBayes)
-#' @param sd_est: estimate of standard deviation
-#' @param s2_df: degrees of freedom of inverse gamma prior
-#' @param s2_ind: indices of function
-#' @param meas_error_cor: measurement error correlation (default: NULL)
-#' @param theta_ind: indices of theta (default: NULL)
-#' @param D: discrepancy basis (matrix of columns of basis, default:
-#'           NaN)
-#' @param discrep_tau: discrepancy sampling tau
+#' @description This method adds vector experiments to calibration object
+#'
+#' @param obj `CalibSetup` Object
+#' @param yobs a vector of the experiment or observation
+#' @param model emulator (currently expecting a object of class
+#'                         `ModelBassPca_func` or `ModelmvBayes`)
+#' @param sd_est estimate of standard deviation
+#' @param s2_df degrees of freedom of inverse gamma prior
+#' @param s2_ind indices of function
+#' @param meas_error_cor measurement error correlation (default: `NULL`)
+#' @param theta_ind indices of theta (default: `NULL`)
+#' @param D discrepancy basis (matrix of columns of basis, default:
+#'           `NaN`)
+#' @param discrep_tau discrepancy sampling tau
 #'
 #' @return An object of class `CalibSetup`
 #'

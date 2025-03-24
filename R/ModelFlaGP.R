@@ -1,17 +1,15 @@
-#' FlaGP Emulator for Functional Outputs (GP)
+#' @title FlaGP Emulator for Functional Outputs (GP)
 #'
-#' ModelFlaGP Handles larger-dimensional functional responses (e.g., on
+#' @description ModelFlaGP Handles larger-dimensional functional responses (e.g., on
 #' large spatial fields) using various inversion tricks. We require any
 #' other covariance e.g., from discrepancy, measurement error, and basis
-#' truncation error) to be diagonal
+#' truncation error) to be diagonal. This function setups up emulator object.
 #'
-#' This function setups up emulator object.
-#'
-#' @param bmod: a object of the type `flagp`
-#' @param input_names: cell array of strings of input variable names
-#' @param exp_ind: experiment indices (default: NULL)
-#' @param s2: how to sample error variance (default: 'MH')
-#' @param h: h representation of warping function (default: FALSE)
+#' @param bmod a object of the type `flagp`
+#' @param input_names cell array of strings of input variable names
+#' @param exp_ind experiment indices (default: NULL)
+#' @param s2 how to sample error variance (default: 'MH')
+#' @param h h representation of warping function (default: FALSE)
 #'
 #' @return An object of class `ModelFlaGP`
 #'
@@ -33,10 +31,10 @@ ModelFlaGP <- function(bmod,
 
   npc = bmod$basis$sim$n.pc
   X.orig = bmod$XT.data$sim$X$orig
-  tmp1 = predict(bmod,X.pred.orig=X.orig,verbose=F)
-  emu_vars = var(t(tmp1$y.mean - bmod$Y.data$sim$orig))
+  tmp1 = FLaGP::predict(bmod,X.pred.orig=X.orig,verbose=F)
+  emu_vars = stats::var(t(tmp1$y.mean - bmod$Y.data$sim$orig))
   truncError = bmod$basis$sim$B %*% bmod$basis$sim$V.t -  bmod$Y.data$sim$trans
-  trunc_error_var = cov(t(truncError))
+  trunc_error_var = stats::cov(t(truncError))
 
   obj <- list(
     model = bmod,
@@ -67,14 +65,14 @@ ModelFlaGP <- function(bmod,
 
 
 #' @export
-step_m.ModelFlaGP <- function(obj) {
+step_m.ModelFlaGP <- function(obj, ...) {
   obj
 }
 
 
 #' @export
-discrep_sample.ModelFlaGP <- function(obj, yobs, pred, cov, itemp) {
-  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% D
+discrep_sample.ModelFlaGP <- function(obj, yobs, pred, cov, itemp, ...) {
+  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
   m = t(obj$D) %*% cov$inv %*% (yobs - pred)
   discrep_vars = chol_sample(solve(S,m), S / itemp)
   discrep_vars
@@ -83,9 +81,10 @@ discrep_sample.ModelFlaGP <- function(obj, yobs, pred, cov, itemp) {
 
 #' @export
 evalm.ModelFlaGP <- function(obj,
-                                  parmat,
-                                  pool = TRUE,
-                                  nugget = FALSE) {
+                             parmat,
+                             pool = TRUE,
+                             nugget = FALSE,
+                             ...) {
   fn = obj$input_names
   parmat_array = matrix(0, length(parmat[[fn[1]]]), length(fn))
   for (i in 1:length(fn)) {
@@ -105,7 +104,7 @@ evalm.ModelFlaGP <- function(obj,
 
 
 #' @export
-llik.ModelFlaGP <- function(obj, yobs, pred, cov) {
+llik.ModelFlaGP <- function(obj, yobs, pred, cov, ...) {
   vec = c(yobs - pred)
   out = -0.5 * (cov$ldet + t(vec) %*% cov$inv %*% vec)
   out
@@ -113,7 +112,7 @@ llik.ModelFlaGP <- function(obj, yobs, pred, cov) {
 
 
 #' @export
-lik_cov_inv.ModelFlaGP <- function(obj, s2vec) {
+lik_cov_inv.ModelFlaGP <- function(obj, s2vec, ...) {
   N = length(s2vec)
   Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
   mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$emu_vars

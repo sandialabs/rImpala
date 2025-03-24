@@ -1,8 +1,9 @@
-#' This function setups up temperature ladder for tempering
+#' @title Set Temperature Ladder
+#' @description This function setups up temperature ladder for tempering
 #'
-#' @param obj: CalibSetup Object
-#' @param temperature_ladder: array of temperatures
-#' @param start_temper: what MCMC sample to start tempering (default: 1000)
+#' @param obj CalibSetup Object
+#' @param temperature_ladder array of temperatures
+#' @param start_temper what MCMC sample to start tempering (default: 1000)
 #'
 #' @return An object of class `CalibSetup`
 #'

@@ -2,7 +2,7 @@
 % Please edit documentation in R/addVecExperiments.R
 \name{addVecExperiments}
 \alias{addVecExperiments}
-\title{This method adds vector experiments to calibration object}
+\title{Add vector experiments}
 \usage{
 addVecExperiments(
   obj,
@@ -18,27 +18,27 @@ addVecExperiments(
 )
 }
 \arguments{
-\item{obj:}{CalibSetup Object}
+\item{obj}{`CalibSetup` Object}
 
-\item{yobs:}{a vector of the experiment or observation}
+\item{yobs}{a vector of the experiment or observation}
 
-\item{model:}{emulator (currently expecting a object of class
-ModelBassPca_func or ModelmvBayes)}
+\item{model}{emulator (currently expecting a object of class
+`ModelBassPca_func` or `ModelmvBayes`)}
 
-\item{sd_est:}{estimate of standard deviation}
+\item{sd_est}{estimate of standard deviation}
 
-\item{s2_df:}{degrees of freedom of inverse gamma prior}
+\item{s2_df}{degrees of freedom of inverse gamma prior}
 
-\item{s2_ind:}{indices of function}
+\item{s2_ind}{indices of function}
 
-\item{meas_error_cor:}{measurement error correlation (default: NULL)}
+\item{meas_error_cor}{measurement error correlation (default: `NULL`)}
 
-\item{theta_ind:}{indices of theta (default: NULL)}
+\item{theta_ind}{indices of theta (default: `NULL`)}
 
-\item{D:}{discrepancy basis (matrix of columns of basis, default:
-NaN)}
+\item{D}{discrepancy basis (matrix of columns of basis, default:
+`NaN`)}
 
-\item{discrep_tau:}{discrepancy sampling tau}
+\item{discrep_tau}{discrepancy sampling tau}
 }
 \value{
 An object of class `CalibSetup`

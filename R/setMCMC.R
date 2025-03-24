@@ -1,15 +1,17 @@
-#' This function setups up MCMC parameters for adaptive MCMC,
+#' @title Set MCMC Parameters
+#' @description This function setups up MCMC parameters for adaptive MCMC,
 #' also includes tempering and decorrelation steps
 #'
-#' @param nmcmc: number of mcmc iterations
-#' @param nburn: number of mcmc burn in iterations (default: 0)
-#' @param thin: number of samples to thin (default: 1)
-#' @param decor: number of mcmc iterations before decorrelation step (default: 100)
-#' @param start_var_theta: start variance of theta proposal (default: 1e-8)
-#' @param start_tau_theta: start tau of theta (default: 0)
-#' @param start_var_ls2: start variance of sigma proposal (default: 1e-5)
-#' @param start_tau_ls2: start tau of sigma (default: 0)
-#' @param start_adpat_iter: number of iterations before adaption
+#' @param `calibPool` object
+#' @param nmcmc number of mcmc iterations
+#' @param nburn number of mcmc burn in iterations (default: 0)
+#' @param thin number of samples to thin (default: 1)
+#' @param decor number of mcmc iterations before decorrelation step (default: 100)
+#' @param start_var_theta start variance of theta proposal (default: 1e-8)
+#' @param start_tau_theta start tau of theta (default: 0)
+#' @param start_var_ls2 start variance of sigma proposal (default: 1e-5)
+#' @param start_tau_ls2 start tau of sigma (default: 0)
+#' @param start_adapt_iter number of iterations before adaption
 #'                          (default: 300)
 #' @return An object of class `CalibSetup`
 #'

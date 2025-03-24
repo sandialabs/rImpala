@@ -38,7 +38,14 @@ chol_solve <- function(x) {
 }
 
 
+#' @title Compare to bounds
+#' @description This function compares variables to bounds
+#'
+#' @param x list of of parameters
+#' @param bounds list of bounds for each parameter that is a two parameter vector with high and low
+#'
 #' @export
+#'
 cf_bounds <- function(x, bounds) {
   k = names(bounds)
   good = x[[k[1]]] < bounds[[k[1]]][2]
@@ -71,7 +78,15 @@ unnormalize <- function(z, bounds) {
 }
 
 
+#' @title Transform parameters
+#' @description Transforms variables from the scale 0 to 1 to variable provided by bounds
+#'
+#' @param th list of of parameters
+#' @param bounds list of bounds for each parameter that is a two parameter vector with high and low
+#' @param names vector of variable names
+#'
 #' @export
+#'
 tran_unif <- function(th, bounds, names) {
   out = list()
   tbounds = unnormalize(th, bounds)

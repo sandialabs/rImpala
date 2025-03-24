@@ -39,7 +39,14 @@ step_m.default <- function(obj, ...) {
 }
 
 
+#' @title evalm constructor
+#' @description Default constructor for evalm class
+#'
+#' @param obj evalm object
+#' @param ... additional arugments passed to method
+#'
 #' @export
+#'
 evalm <- function(obj, ...) {
   UseMethod("evalm")
 }

@@ -15,17 +15,17 @@ ModelmvBayes_elastic(
 )
 }
 \arguments{
-\item{bmod:}{a object of the type `mvBayes` of aligned functions}
+\item{bmod}{a object of the type `mvBayes` of aligned functions}
 
-\item{bmod_warp:}{a object of the type `mvBayes` of warping functions}
+\item{bmod_warp}{a object of the type `mvBayes` of warping functions}
 
-\item{input_names:}{cell array of strings of input variable names}
+\item{input_names}{cell array of strings of input variable names}
 
-\item{exp_ind:}{experiment indices (default: NULL)}
+\item{exp_ind}{experiment indices (default: NULL)}
 
-\item{s2:}{how to sample error variance (default: 'MH')}
+\item{s2}{how to sample error variance (default: 'MH')}
 
-\item{h:}{h representation of warping function (default: FALSE)}
+\item{h}{h representation of warping function (default: FALSE)}
 }
 \value{
 An object of class `ModelmvBayes_elastic`

@@ -7,13 +7,13 @@
 ModelBassPca_func(bmod, input_names, exp_ind = NULL, s2 = "MH")
 }
 \arguments{
-\item{bmod:}{a object of the type `bassBasis`}
+\item{bmod}{a object of the type `bassBasis`}
 
-\item{input_names:}{cell array of strings of input variable names}
+\item{input_names}{cell array of strings of input variable names}
 
-\item{exp_ind:}{experiment indices (default: NULL)}
+\item{exp_ind}{experiment indices (default: NULL)}
 
-\item{s2:}{how to sample error variance (default: 'MH')}
+\item{s2}{how to sample error variance (default: 'MH')}
 }
 \value{
 An object of class `ModelBassPca_func`
