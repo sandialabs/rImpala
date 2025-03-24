@@ -11,7 +11,7 @@ R:
     - apt-get update
     - apt-get upgrade -y
     - apt-get install -y -f libssl-dev libfontconfig1-dev
-    - R -e 'install.packages(c("BASS", "progress", "einsum", "fdasrvf", "devtools"))'
+    - R -e 'install.packages(c("BASS", "progress", "einsum", "fdasrvf", "devtools"),repos = "http://cran.us.r-project.org")'
     - R -e 'devtools::install_github("gqcollins/BayesPPR")'
     - R -e 'devtools::install_git('https://cee-gitlab.sandia.gov/statistics/mvBayes.git', subdir='mvBayesR')"'
     - R CMD build . --no-build-vignettes --no-manual
