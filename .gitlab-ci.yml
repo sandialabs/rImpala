@@ -1,6 +1,10 @@
 workflow:
     name: impala
 
+variables:
+  GITHUB_PAT: $GITHUB_TOKEN
+
+
 R:
   image: rstudio/r-base:4.4.3-noble
   script:
