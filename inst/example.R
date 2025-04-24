@@ -1,7 +1,6 @@
 library(impala)
 library(BASS)
 library(mvBayes)
-library(scaledVecchia)
 library(fdasrvf)
 library(bayesplot)
 
