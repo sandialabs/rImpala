@@ -1,3 +1,11 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-.gitlab-ci.yml
+^CRAN-SUBMISSION$
+^\.github$
+^\src\*.a
+^\src\*.o
+^\src\*.so
+fdasrvf.Rproj
+cran-comments.md
+^.*\.Rproj$
+^revdep$
