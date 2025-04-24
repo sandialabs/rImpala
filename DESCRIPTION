@@ -9,7 +9,7 @@ Authors@R: c(
            email = "jdtuck@sandia.gov", 
            comment = c(ORCID = "0000-0001-8844-2169")))
 Description: Performs Bayesian Model Calibration for emulator based models.
-License: GPL-3
+License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
     cli,
