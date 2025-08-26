@@ -147,7 +147,12 @@ evalm.ModelmvBayes <- function(obj,
     cli::cli_abort("Not Implemented")
   }
 
-  pred[1, , ]
+  if (ndims(pred) == 3){
+    return(pred[1, , ])
+  } else {
+    return(pred)
+  }
+
 }
 
 
