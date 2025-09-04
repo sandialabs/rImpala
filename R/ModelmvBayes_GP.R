@@ -38,11 +38,18 @@ ModelmvBayes_GP <- function(bmod,
   emu_vars = rep(NA, npc)
   N = length(bmod$bmList[[1]]$covparms)
   for (ii in 1:npc) {
-    tmp = stats::predict(bmod$bmList[[ii]],
-                         bmod$bmList[[ii]]$locs,
-                         joint = FALSE,
-                         predvar = TRUE)
-    emu_vars[ii] = mean(tmp$vars)
+    if (class(bmod$bmList[[ii]]) == "scaledVecchia"){
+      tmp = stats::predict(bmod$bmList[[ii]],
+                           bmod$bmList[[ii]]$locs,
+                           joint = FALSE,
+                           predvar = TRUE)
+      emu_vars[ii] = mean(tmp$vars)
+    } else {
+      tmp = stats::predict(bmod$bmList[[ii]],
+                           bmod$bmList[[ii]]$X0)
+      emu_vars[ii] = mean(apply(tmp,2,var))
+    }
+
   }
 
   obj <- list(
