@@ -9,3 +9,5 @@ impala.Rproj
 cran-comments.md
 ^.*\.Rproj$
 ^revdep$
+^\.positai$
+^\.claude$
