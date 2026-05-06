@@ -58,6 +58,9 @@ jobs:
             any::rmarkdown
             any::BASS
             any::fdasrvf
+            any::bayesplot
+            any::hexbin
+            any::gridExtra
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
