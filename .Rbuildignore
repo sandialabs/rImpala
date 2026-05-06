@@ -11,3 +11,4 @@ cran-comments.md
 ^revdep$
 ^\.positai$
 ^\.claude$
+^cran-comments\.md$
