@@ -46,9 +46,10 @@ jobs:
           dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
-            knitr
-            rmarkdown
-            BASS
+            any::knitr
+            any::markdown
+            any::BASS
+            remotes::install_github("sandialabs/mvBayesR")
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
