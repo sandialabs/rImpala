@@ -4,7 +4,7 @@ Impala R package
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/sandialabs/rimpala/actions/workflows/r.yml/badge.svg)](https://github.com/sandialabs/rimpala/actions/workflows/r.yml)
-[![CRAN status](https://www.r-pkg.org/badges/version/rImpala)](https://CRAN.R-project.org/package=rImpala)
+<!--[![CRAN status](https://www.r-pkg.org/badges/version/rImpala)](https://CRAN.R-project.org/package=rImpala)-->
 <!-- badges: end -->
 
 This is an R translation of LANLs [Impala](https://github.com/lanl/impala).
