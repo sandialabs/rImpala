@@ -57,6 +57,7 @@ jobs:
             any::knitr
             any::rmarkdown
             any::BASS
+            any::fdasrvf
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
