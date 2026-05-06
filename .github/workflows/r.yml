@@ -49,7 +49,7 @@ jobs:
             any::knitr
             any::markdown
             any::BASS
-            remotes::install_github("sandialabs/mvBayesR")
+            remotes::install_github('"sandialabs/mvBayesR"')
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
