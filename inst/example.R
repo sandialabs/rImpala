@@ -3,7 +3,6 @@ library(BASS)
 library(mvBayes)
 library(fdasrvf)
 library(bayesplot)
-library(scaledVecchia)
 
 # generate functions
 f <- function(x) {
@@ -81,27 +80,10 @@ legend(
 )
 
 # fit emulator ------------------------------------------------------------
-
-gp <- function(X, Z){
-  out = mleHomGP(X, Z)
-  class(out) <- "homGP1"
-  out
-}
-
-predict.homGP1 <- function(fit, locs, nsims=101, ...){
-  tmp = hetGP:::predict.homGP(fit, locs)
-  out = matrix(0, nrow=nsims, ncol=nrow(locs))
-  for (i in 1:nrow(locs)){
-    out[,i] = rnorm(nsims, tmp$mean[i], sqrt(tmp$sd2[i]))
-  }
-  out
-}
-
-
-emu_ftilde = mvBayes(scaledVecchia, x_train, t(ftilde_train), nBasis=2)
+emu_ftilde = mvBayes(bass, x_train, t(ftilde_train), nBasis=2)
 plot(emu_ftilde)
 
-emu_vv = mvBayes(scaledVecchia, x_train, t(vv_train), nBasis=2)
+emu_vv = mvBayes(bass, x_train, t(vv_train), nBasis=2)
 plot(emu_vv)
 
 # impala ------------------------------------------------------------------
@@ -113,8 +95,8 @@ bounds[['theta2']] = c(0, 1)
 
 setup = CalibSetup(bounds, cf_bounds)
 
-model_ftilde = ModelmvBayes_GP(emu_ftilde, input_names)
-model_vv = ModelmvBayes_GP(emu_vv, input_names)
+model_ftilde = ModelmvBayes(emu_ftilde, input_names)
+model_vv = ModelmvBayes(emu_vv, input_names)
 
 setup = addVecExperiments(setup, t(ftilde_obs), model_ftilde, 0.01, 20, rep(1, nt))
 setup = addVecExperiments(setup, t(vv_obs), model_vv, 0.01, 20, rep(1, nt))
