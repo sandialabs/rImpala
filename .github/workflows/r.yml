@@ -41,6 +41,14 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      - name: Install remotes
+        run: |
+          Rscript -e "install.packages('remotes')"
+
+      - name: Install gyro from Github
+        run: |
+          Rscript -e "remotes::install_github('sandialabs/mvBayesR')"
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
@@ -49,7 +57,6 @@ jobs:
             any::knitr
             any::markdown
             any::BASS
-            remotes::install_github('"sandialabs/mvBayesR"')
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
