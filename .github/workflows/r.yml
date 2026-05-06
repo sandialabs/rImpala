@@ -55,7 +55,7 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::knitr
-            any::markdown
+            any::rmarkdown
             any::BASS
           needs: check
 
