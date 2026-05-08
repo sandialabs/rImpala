@@ -7,7 +7,7 @@ Impala R package
 [![CRAN status](https://www.r-pkg.org/badges/version/impala)](https://CRAN.R-project.org/package=impala)
 <!-- badges: end -->
 
-This is an R translation of LANLs [Impala](https://github.com/lanl/impala).
+Python tools for modular Bayesian model calibration. Posterior exploration includes tempering and adaptive MCMC. This is an R translation of LANLs [Impala](https://github.com/lanl/impala). 
 
 ### Installation
 ------------------------------------------------------------------------------

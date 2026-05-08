@@ -8,7 +8,8 @@ Authors@R: c(
            role = c("aut", "cre"), 
            email = "jdtuck@sandia.gov", 
            comment = c(ORCID = "0000-0001-8844-2169")))
-Description: Performs Bayesian Model Calibration for emulator based models.
+Description: Python tools for modular Bayesian model calibration. 
+  Posterior exploration includes tempering and adaptive MCMC (Francom et al., 2025 <DOI:10.1137/24M164409>).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
@@ -21,7 +22,6 @@ Suggests:
     BASS,
     BayesPPR,
     mvBayes,
-    FlaGP,
     coda,
     bayesplot,
     gridExtra,
