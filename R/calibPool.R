@@ -17,7 +17,7 @@
 #' - discrep_vars: discrepancy coefficients
 #' - llik: log likelihood
 #' - theta_native: mcmc samples of variables in native scale
-#'
+#' @example inst/small_example.R
 #' @export
 #'
 calibPool <- function(setup) {

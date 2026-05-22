@@ -5,7 +5,7 @@ llik <- function(obj, ...) {
 
 #' @export
 llik.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -15,7 +15,7 @@ lik_cov_inv <- function(obj, ...) {
 
 
 lik_cov_inv.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -25,7 +25,7 @@ discrep_sample <- function(obj, ...) {
 
 
 discrep_sample.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -35,7 +35,7 @@ step_m <- function(obj, ...) {
 
 #' @export
 step_m.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -54,7 +54,7 @@ evalm <- function(obj, ...) {
 
 #' @export
 evalm.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 update_m <- function(obj, ...) {
@@ -63,7 +63,7 @@ update_m <- function(obj, ...) {
 
 #' @export
 update_m.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -73,7 +73,7 @@ update_tau <- function(obj, ...) {
 
 
 update_tau.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }
 
 
@@ -83,5 +83,5 @@ gen_cand <- function(obj, ...) {
 
 
 gen_cand.default <- function(obj, ...) {
-  cat("This is a generic function\n")
+  cli::cli_alert_info("This is a generic function\n")
 }

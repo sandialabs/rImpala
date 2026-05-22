@@ -7,7 +7,8 @@ Authors@R: c(
            family = "Tucker", 
            role = c("aut", "cre"), 
            email = "jdtuck@sandia.gov", 
-           comment = c(ORCID = "0000-0001-8844-2169")))
+           comment = c(ORCID = "0000-0001-8844-2169")),
+    person("Sandia National Laboratories", role = c("cph", "fnd")))
 Description: Python tools for modular Bayesian model calibration. 
   Posterior exploration includes tempering and adaptive MCMC (Francom et al., 2025 <DOI:10.1137/24M164409>).
 License: MIT + file LICENSE
