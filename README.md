@@ -1,5 +1,8 @@
 Impala R package
 ================
+
+![](man/figures/logo.png)
+
 *R library for modular Bayesian model calibration.  Posterior exploration includes tempering and adaptive MCMC.*
 
 <!-- badges: start -->
