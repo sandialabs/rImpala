@@ -10,7 +10,7 @@ Authors@R: c(
            comment = c(ORCID = "0000-0001-8844-2169")),
     person("Sandia National Laboratories", role = c("cph", "fnd")))
 Description: Python tools for modular Bayesian model calibration. 
-  Posterior exploration includes tempering and adaptive MCMC (Francom et al., 2025 <DOI:10.1137/24M164409>).
+  Posterior exploration includes tempering and adaptive MCMC (Francom et al., 2025 <DOI:10.1137/24M1644092>).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
