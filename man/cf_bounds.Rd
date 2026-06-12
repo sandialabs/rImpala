@@ -11,6 +11,9 @@ cf_bounds(x, bounds)
 
 \item{bounds}{list of bounds for each parameter that is a two parameter vector with high and low}
 }
+\value{
+a vector of `TRUE` or `FALSE` if the values are within the bounds
+}
 \description{
 This function compares variables to bounds
 }

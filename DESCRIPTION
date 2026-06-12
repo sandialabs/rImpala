@@ -9,8 +9,10 @@ Authors@R: c(
            email = "jdtuck@sandia.gov", 
            comment = c(ORCID = "0000-0001-8844-2169")),
     person("Sandia National Laboratories", role = c("cph", "fnd")))
-Description: Python tools for modular Bayesian model calibration. 
-  Posterior exploration includes tempering and adaptive MCMC (Francom et al., 2025 <DOI:10.1137/24M1644092>).
+Description: Package provides tools for modular Bayesian model calibration. these tools allow for 
+  posterior exploration with sampling methods including tempering and adaptive Markov Chain Monte Carlo (MCMC).
+  Allows for pooled calibration or hierarchal calibration of parameters.
+  For more information see Francom et al., 2025 <DOI:10.1137/24M1644092>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:

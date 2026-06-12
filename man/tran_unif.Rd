@@ -13,6 +13,9 @@ tran_unif(th, bounds, names)
 
 \item{names}{vector of variable names}
 }
+\value{
+a list of parameters
+}
 \description{
 Transforms variables from the scale 0 to 1 to variable provided by bounds
 }

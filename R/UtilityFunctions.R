@@ -51,6 +51,8 @@ chol_sample <- function(mean, cov) {
 #' @param x list of of parameters
 #' @param bounds list of bounds for each parameter that is a two parameter vector with high and low
 #'
+#' @return a vector of `TRUE` or `FALSE` if the values are within the bounds
+#'
 #' @export
 #'
 cf_bounds <- function(x, bounds) {
@@ -91,6 +93,8 @@ unnormalize <- function(z, bounds) {
 #' @param th list of of parameters
 #' @param bounds list of bounds for each parameter that is a two parameter vector with high and low
 #' @param names vector of variable names
+#'
+#' @return a list of parameters
 #'
 #' @export
 #'

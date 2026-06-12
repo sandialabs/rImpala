@@ -11,6 +11,9 @@ evalm(obj, ...)
 
 \item{...}{additional arugments passed to method}
 }
+\value{
+An object of class `evalm`
+}
 \description{
 Default constructor for evalm class
 }

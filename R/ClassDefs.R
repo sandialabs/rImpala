@@ -45,6 +45,8 @@ step_m.default <- function(obj, ...) {
 #' @param obj evalm object
 #' @param ... additional arugments passed to method
 #'
+#' @return An object of class `evalm`
+#'
 #' @export
 #'
 evalm <- function(obj, ...) {
