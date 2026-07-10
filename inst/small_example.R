@@ -43,6 +43,6 @@ model = ModelmvBayes(emu, input_names)
 setup = addVecExperiments(setup, t(f_obs), model, 0.01, 20, rep(1, nt))
 setup = setTemperatureLadder(setup, 1.05 ^ (0:2))
 # run more MCMC samples for accuracy
-setup = setMCMC(setup, 300, 100, 1, 10)
+setup = setMCMC(setup, 200, 100, 1, 10)
 out_cal = calibPool(setup)
 
