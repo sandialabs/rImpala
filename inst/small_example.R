@@ -9,8 +9,9 @@ f <- function(x) {
         0.05) * x[2]
 }
 
-n = 100
-nt = 99
+# run more functions for accuracy
+n = 70
+nt = 50
 p = 3
 x_train = matrix(runif(n * p), n)
 e = rnorm(n * 99)
@@ -41,6 +42,7 @@ model = ModelmvBayes(emu, input_names)
 
 setup = addVecExperiments(setup, t(f_obs), model, 0.01, 20, rep(1, nt))
 setup = setTemperatureLadder(setup, 1.05 ^ (0:2))
-setup = setMCMC(setup, 800, 500, 1, 10)
+# run more MCMC samples for accuracy
+setup = setMCMC(setup, 300, 100, 1, 10)
 out_cal = calibPool(setup)
 
