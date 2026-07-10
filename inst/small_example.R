@@ -4,7 +4,7 @@ library(mvBayes)
 
 # generate functions
 f <- function(x) {
-  dnorm(seq(0, 1, length.out = 99),
+  dnorm(seq(0, 1, length.out = 50),
         sin(2 * pi * x[1] ^ 2) / 4 - x[1] / 10 + 0.5,
         0.05) * x[2]
 }
