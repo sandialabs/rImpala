@@ -1,7 +1,7 @@
 Package: impala
 Type: Package
 Title: Bayesian Model Calibration
-Version: 0.1.2
+Version: 0.1.2.9000
 Authors@R: c(
     person(given = "J. Derek", 
            family = "Tucker", 
