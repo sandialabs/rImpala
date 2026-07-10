@@ -277,6 +277,9 @@ calibPool <- function(setup) {
 
         for (t in 1:setup$ntemps) {
           tmpi = exp(ls2_candi[t])
+          if (is.infinite(tmpi)){
+            tmpi = 1e100
+          }
           marg_lik_cov_candi[[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]])
           llik_candi[t] = llik(
             setup$models[[i]],
@@ -326,8 +329,8 @@ calibPool <- function(setup) {
           if (setup$models[[i]]$nd > 0) {
             sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
               (
-                -0.5 * rowSums(discrep_vars[[i]][m, (sw[1, ])]^2) / setup$models[[i]]$discrep_tau +
-                  0.5 * rowSums(discrep_vars[[i]][m, (sw[2, ])]^2) / setup$models[[i]]$discrep_tau
+                -0.5 * rowSums(discrep_vars[[i]][m, (sw[1, ]),]^2) / setup$models[[i]]$discrep_tau +
+                  0.5 * rowSums(discrep_vars[[i]][m, (sw[2, ]),]^2) / setup$models[[i]]$discrep_tau
               )
           }
         }
@@ -344,10 +347,10 @@ calibPool <- function(setup) {
             pred_curr[[i]][tt[1], ] = pred_curr[[i]][tt[2], ]
             pred_curr[[i]][tt[2], ] = pred_curr[[i]][tt[1], ]
             if (setup$models[[i]]$nd > 0) {
-              discrep_curr[[i]][tt[1, ]] = discrep_curr[[i]][tt[2], ]
-              discrep_curr[[i]][tt[2, ]] = discrep_curr[[i]][tt[1], ]
-              discrep_vars[[i]][m, tt[1]] = discrep_vars[[i]][m, tt[2]]
-              discrep_vars[[i]][m, tt[2]] = discrep_vars[[i]][m, tt[1]]
+              discrep_curr[[i]][tt[1], ] = discrep_curr[[i]][tt[2], ]
+              discrep_curr[[i]][tt[2], ] = discrep_curr[[i]][tt[1], ]
+              discrep_vars[[i]][m, tt[1], ] = discrep_vars[[i]][m, tt[2], ]
+              discrep_vars[[i]][m, tt[2], ] = discrep_vars[[i]][m, tt[1], ]
             }
             llik_curr[i, tt[1]] = llik_curr[i, tt[2]]
             llik_curr[i, tt[2]] = llik_curr[i, tt[1]]

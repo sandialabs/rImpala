@@ -39,8 +39,7 @@ chol_solve <- function(x) {
 
 
 chol_sample <- function(mean, cov) {
-  N = nrow(mean) * ncol(mean)
-  out = mean + t(chol(cov)) * matrix(stats::rnorm(N), nrow(mean), ncol(mean))
+  out = mean + t(chol(cov)) %*% rnorm(length(mean))
   return(out)
 }
 
