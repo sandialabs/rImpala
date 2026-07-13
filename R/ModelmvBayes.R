@@ -150,7 +150,11 @@ evalm.ModelmvBayes <- function(obj,
   }
 
   if (ndims(pred) == 3){
-    return(pred[1, , ])
+    out = pred[1, ,]
+    if (dim(pred)[3] == 1){
+      out = t(t(out))
+    }
+    return(out)
   } else {
     return(pred)
   }
