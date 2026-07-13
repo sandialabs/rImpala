@@ -383,7 +383,10 @@ calibPool <- function(setup) {
     s2[[i]] = exp(log_s2[[i]])
   }
 
-  theta_native = tran_unif(theta[, 1, ], setup$bounds_mat, names(setup$bounds))
+  if (dim(theta)[3] == 1){
+    theta_cand = t(t(theta[, 1, ]))
+  }
+  theta_native = tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds))
 
   out <- list(
     theta = theta,
