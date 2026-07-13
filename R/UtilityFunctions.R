@@ -80,7 +80,13 @@ unnormalize <- function(z, bounds) {
   m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
   diff_tmp = t(replicate(nrow(z), diff))
+  if (nrow(diff_tmp) == 1){
+    diff_tmp = t(diff_tmp)
+  }
   mtmp = t(replicate(nrow(z), m))
+  if (nrow(mtmp) == 1){
+    mtmp = t(mtmp)
+  }
   out = z * diff_tmp + mtmp
   out
 }
