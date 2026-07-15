@@ -1,4 +1,5 @@
 # impala (development version)
+* Bugfixes for dimensions
 
 # impala 0.1.2
 * Bugfixes to discrepancy
