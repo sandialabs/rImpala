@@ -350,24 +350,31 @@ calibPool <- function(setup) {
         for (tti in idx) {
           tt = sw[, tti]
           for (i in 1:setup$nexp) {
+            tmp = log_s2[[i]][m, tt[1], ]
             log_s2[[i]][m, tt[1], ] = log_s2[[i]][m, tt[2], ]
-            log_s2[[i]][m, tt[2], ] = log_s2[[i]][m, tt[1], ]
+            log_s2[[i]][m, tt[2], ] = tmp
+            tmp = marg_lik_cov_cur[[i]][tt[1]]
             marg_lik_cov_cur[[i]][tt[1]] = marg_lik_cov_cur[[i]][tt[2]]
-            marg_lik_cov_cur[[i]][tt[2]] = marg_lik_cov_cur[[i]][tt[1]]
+            marg_lik_cov_cur[[i]][tt[2]] = tmp
+            tmp = pred_curr[[i]][tt[1], ]
             pred_curr[[i]][tt[1], ] = pred_curr[[i]][tt[2], ]
-            pred_curr[[i]][tt[2], ] = pred_curr[[i]][tt[1], ]
+            pred_curr[[i]][tt[2], ] = tmp
             if (setup$models[[i]]$nd > 0) {
+              tmp = discrep_curr[[i]][tt[1], ]
               discrep_curr[[i]][tt[1], ] = discrep_curr[[i]][tt[2], ]
-              discrep_curr[[i]][tt[2], ] = discrep_curr[[i]][tt[1], ]
+              discrep_curr[[i]][tt[2], ] = tmp
+              tmp = discrep_vars[[i]][m, tt[1], ]
               discrep_vars[[i]][m, tt[1], ] = discrep_vars[[i]][m, tt[2], ]
-              discrep_vars[[i]][m, tt[2], ] = discrep_vars[[i]][m, tt[1], ]
+              discrep_vars[[i]][m, tt[2], ] = tmp
             }
+            tmp = llik_curr[i, tt[1]]
             llik_curr[i, tt[1]] = llik_curr[i, tt[2]]
-            llik_curr[i, tt[2]] = llik_curr[i, tt[1]]
+            llik_curr[i, tt[2]] = tmp
           }
           count[tt[1], tt[2]] = count[tt[1], tt[2]] + 1
+          tmp = theta[m, tt[1], ]
           theta[m, tt[1], ] = theta[m, tt[2], ]
-          theta[m, tt[2], ] = theta[m, tt[1], ]
+          theta[m, tt[2], ] = tmp
         }
       }
     }
