@@ -113,6 +113,45 @@ tran_unif <- function(th, bounds, names) {
 }
 
 
+# Evaluate the log-prior for calibration parameters. `theta` is a named list of
+# parameter vectors (one entry per temperature), as returned by `tran_unif`.
+# `priors` is `setup$theta_prior`; when NULL/empty this returns a vector of zeros
+# so calibration is unaffected when no prior has been added.
+eval_theta_priors = function(theta, priors, tnames=NULL){
+  lp = rep(0,length(theta[[1]]))
+  if(!is.null(tnames))
+    names(theta) = tnames
+
+  for(p in priors){
+
+    # Check if this is a joint prior (has 'names' field) or independent prior (has 'name' field)
+    if(!is.null(p$names)){
+      # Joint prior - extract multiple parameters and call custom function
+      params_list = lapply(p$names, function(nm) theta[[nm]])
+      names(params_list) = p$names
+      add = p$log_density_fn(params_list)
+    } else {
+      # Independent prior - use standard distributions
+      x = theta[[p$name]]
+
+      add <- switch(
+        p$dist,
+        normal   = stats::dnorm(x, mean = p$params$mean, sd = p$params$sd, log = TRUE),
+        lognormal  = stats::dlnorm(x, meanlog = p$params$meanlog, sdlog = p$params$sdlog, log = TRUE),
+        beta   = stats::dbeta(x, shape1 = p$params$shape1, shape2 = p$params$shape2, log = TRUE),
+        uniform   = stats::dunif(x, min = p$params$min, max = p$params$max, log = TRUE),
+        gamma  = stats::dgamma(x, shape = p$params$shape, rate = p$params$rate, log = TRUE),
+        cauchy = stats::dcauchy(x, location = p$params$location, scale = p$params$scale, log = TRUE),
+        stop("Unsupported dist: ", p$dist)
+      )
+    }
+
+    lp = lp + add
+  }
+  lp
+}
+
+
 cov_3d_pcm <- function(arr, mean) {
   N = nrow(arr)
   if (ndims(arr) == 3) {
