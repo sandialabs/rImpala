@@ -1,4 +1,6 @@
 # impala (development version)
+
+# impala 0.1.4
 * Bugfixes for tempering swaps
 
 # impala 0.1.3
