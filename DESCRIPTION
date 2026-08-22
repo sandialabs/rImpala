@@ -24,6 +24,7 @@ Imports:
     cli,
     methods,
     progress,
+    mvtnorm,
     einsum,
 Suggests: 
     fdasrvf,
