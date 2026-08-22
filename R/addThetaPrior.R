@@ -58,6 +58,12 @@ addThetaPrior <- function(obj,
 #'                    sigma=matrix(c(1, 0.5, 0.5, 1), 2, 2),
 #'                    log=TRUE)
 #' }
+#'
+#' input_names = c("theta0", "theta1", "theta2")
+#' bounds = list()
+#' bounds[['t_1']] = c(0, 1)
+#' bounds[['t_2']] = c(0, 1)
+#' setup <- CalibSetup(bounds, cf_bounds)
 #' setup <- addJointThetaPrior(setup, c("t_1", "t_2"), my_joint_prior)
 #'
 addJointThetaPrior <- function(obj,
