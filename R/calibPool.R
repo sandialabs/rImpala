@@ -76,6 +76,14 @@ calibPool <- function(setup) {
     }
   }
 
+  # current log-prior for theta at each temperature (zeros if no prior set)
+  tmp_theta = theta[1, , ]
+  if (dim(theta)[3] == 1){
+    tmp_theta = t(t(tmp_theta))
+  }
+  lpr_curr = eval_theta_priors(tran_unif(tmp_theta, setup$bounds_mat, names(setup$bounds)),
+                               setup$theta_prior)
+
   cov_theta_cand = AMcov_pool(
     setup$ntemps,
     setup$p,
@@ -170,6 +178,8 @@ calibPool <- function(setup) {
     # get predictions and SSE
     pred_cand = pred_curr
     llik_cand = llik_curr
+    lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
+                                 setup$theta_prior)
     if (any(good_values)) {
       llik_cand[, good_values = 0]
       for (i in 1:setup$nexp) {
@@ -188,7 +198,7 @@ calibPool <- function(setup) {
       }
     }
 
-    llik_diff = (colSums(llik_cand) - colSums(llik_curr))
+    llik_diff = ((colSums(llik_cand) + lpr_cand) - (colSums(llik_curr) + lpr_curr))
     llik_diff = llik_diff[good_values]
 
     alpha = rep(1, setup$ntemps) * -Inf
@@ -196,6 +206,7 @@ calibPool <- function(setup) {
     idx = which(log(stats::runif(setup$ntemps)) < alpha)
     for (t in idx) {
       theta[m, t, ] = theta_cand[t, ]
+      lpr_curr[t] = lpr_cand[t]
       count[t, t] = count[t, t] + 1
       for (i in 1:setup$nexp) {
         llik_curr[i, t] = llik_cand[i, t]
@@ -219,6 +230,8 @@ calibPool <- function(setup) {
                                              setup$bounds)
         pred_cand = pred_curr
         llik_cand = llik_curr
+        lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
+                                     setup$theta_prior)
 
         if (any(good_values)) {
           llik_cand[, good_values] = 0
@@ -241,7 +254,7 @@ calibPool <- function(setup) {
 
         alpha = rep(1, setup$ntemps) * -Inf
 
-        llik_diff = (colSums(llik_cand) - colSums(llik_curr))
+        llik_diff = ((colSums(llik_cand) + lpr_cand) - (colSums(llik_curr) + lpr_curr))
         llik_diff = llik_diff[good_values]
 
         alpha[good_values] = setup$itl[good_values] * llik_diff
@@ -249,6 +262,7 @@ calibPool <- function(setup) {
         idx = which(log(stats::runif(setup$ntemps)) < alpha)
         for (t in idx) {
           theta[m, t, k] = theta_cand[t, k]
+          lpr_curr[t] = lpr_cand[t]
           count_decor[k, t] = count_decor[k, t] + 1
           for (i in 1:setup$nexp) {
             pred_curr[[i]][t, ] = pred_cand[[i]][t, ]
@@ -328,6 +342,7 @@ calibPool <- function(setup) {
 
         sw_alpha = rep(0, setup$nswap_per)
         sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ], drop = FALSE]) - colSums(llik_curr[, sw[2, ], drop = FALSE]))
+        sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (lpr_curr[sw[1, ]] - lpr_curr[sw[2, ]])
         for (i in 1:setup$nexp) {
           sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
             (rowSums(matrix(
@@ -380,8 +395,12 @@ calibPool <- function(setup) {
           count[tt[1], tt[2]] = count[tt[1], tt[2]] + 1
           tmp1 = theta[m, tt[1], ]
           tmp2 = theta[m, tt[2], ]
-          theta[m, tt[1], ] = tmp1
-          theta[m, tt[2], ] = tmp2
+          theta[m, tt[1], ] = tmp2
+          theta[m, tt[2], ] = tmp1
+          tmp1 = lpr_curr[tt[1]]
+          tmp2 = lpr_curr[tt[2]]
+          lpr_curr[tt[1]] = tmp2
+          lpr_curr[tt[2]] = tmp1
         }
       }
     }
