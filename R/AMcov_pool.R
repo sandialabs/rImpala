@@ -26,41 +26,36 @@ AMcov_pool <- function(ntemps,
 }
 
 
+# Rebuild the (ntemps x p x p) proposal covariance from the running covariance,
+# ridged by `eps` and scaled per temperature by exp(tau).
+scale_S <- function(obj) {
+  eyetmp = array(0, dim = c(obj$ntemps, obj$p, obj$p))
+  for (i in 1:obj$ntemps) {
+    eyetmp[i, , ] = diag(obj$p)
+  }
+  obj$AM_SCALAR * einsum::einsum('ijk,i->ijk',
+                                 obj$cov + eyetmp * obj$eps,
+                                 exp(obj$tau))
+}
+
+
 #' @export
 update_m.AMcov_pool <- function(obj, x, m, ...) {
   if (m > obj$start_adapt_iter) {
-    obj$mu = obj$mu + (x[m - 1, , ] - obj$mu) / m
-    tmp = x[m - 1, , ] - obj$mu
-    if (ndims(tmp) == 0) {
-      tmp = matrix(tmp)
-      a = ((m - 1) / (m * m)) * einsum::einsum('ti,tj->tij', tmp , tmp)
-      obj$cov = ((m - 1) / m) * obj$cov  + matrix(a[, , 1])
-    } else {
-      obj$cov = (((m - 1) / m) * obj$cov  + ((m - 1) / (m * m)) * einsum::einsum('ti,tj->tij', tmp , tmp))
-    }
-
-    eyetmp = replicate(dim(obj$cov)[1], diag(obj$p), simplify = "array")
-    if (obj$p == 1) {
-      eyetmp = matrix(eyetmp)
-      tmp = array(obj$cov + eyetmp * obj$eps, dim = c(nrow(eyetmp), 1, 1))
-      obj$S  = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', tmp, exp(obj$tau))
-    } else {
-      eyetmp = aperm(eyetmp, c(3, 1, 2))
-      obj$S   = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
-    }
+    # keep the (ntemps x p) shape: single-index slices of a 3-d array drop dims
+    xprev = matrix(x[m - 1, , ], obj$ntemps, obj$p)
+    obj$mu = obj$mu + (xprev - obj$mu) / m
+    tmp = xprev - obj$mu
+    obj$cov = ((m - 1) / m) * obj$cov +
+      ((m - 1) / (m * m)) * einsum::einsum('ti,tj->tij', tmp, tmp)
+    obj$S = scale_S(obj)
 
   } else if (m == obj$start_adapt_iter) {
-    obj$mu = colMeans(x[1:m, , ])
-    obj$cov = cov_3d_pcm(x[1:m, , ], obj$mu)
-    eyetmp = replicate(obj$ntemps, diag(obj$p), simplify = "array")
-    if (obj$p == 1) {
-      eyetmp = matrix(eyetmp)
-      tmp = array(obj$cov + eyetmp * obj$eps, dim = c(length(eyetmp), 1, 1))
-      obj$S  = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', tmp, exp(obj$tau))
-    } else {
-      eyetmp = aperm(eyetmp, c(3, 1, 2))
-      obj$S   = obj$AM_SCALAR * einsum::einsum('ijk,i->ijk', obj$cov + eyetmp * obj$eps, exp(obj$tau))
-    }
+    xhist = array(x[1:m, , ], dim = c(m, obj$ntemps, obj$p))
+    obj$mu = matrix(colMeans(xhist), obj$ntemps, obj$p)
+    obj$cov = array(cov_3d_pcm(xhist, obj$mu),
+                    dim = c(obj$ntemps, obj$p, obj$p))
+    obj$S = scale_S(obj)
   }
   obj
 }
@@ -85,6 +80,7 @@ gen_cand.AMcov_pool <- function(obj, x, m, ...) {
     tmpchol[i, , ] = t(chol(obj$S[i, , ]))
   }
   tmp = matrix(stats::rnorm(obj$ntemps * obj$p), obj$ntemps)
-  x_cand = x[m - 1, , ] + einsum::einsum('ijk,ik->ij', tmpchol, tmp)
+  x_cand = matrix(x[m - 1, , ], obj$ntemps, obj$p) +
+    einsum::einsum('ijk,ik->ij', tmpchol, tmp)
   x_cand
 }

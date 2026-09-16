@@ -129,8 +129,10 @@ evalm.ModelmvBayes <- function(obj,
     if (class(obj$model$bmList[[1]])[1] == "bppr") {
       pred = stats::predict(obj$model, parmat_array, idx_use = obj$ii)
     } else if (class(obj$model$bmList[[1]])[1] == "wbart") {
-      pred = suppressMessages(stats::predict(obj$model, parmat_array, mc.cores = parallel::detectCores() -
-                                               1))
+      # detectCores() can return NA, and is 1 on single-core hosts; keep >= 1
+      ncores = parallel::detectCores()
+      ncores = if (is.na(ncores)) 1L else max(1L, ncores - 1L)
+      pred = suppressMessages(stats::predict(obj$model, parmat_array, mc.cores = ncores))
       pred = pred[obj$ii, , , drop = F]
     } else if (class(obj$model$bmList[[1]])[1] == "bartmodel") {
       pred =  stats::predict(obj$model, parmat_array)

@@ -26,10 +26,13 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
     cli,
-    methods,
-    progress,
     einsum,
-Suggests: 
+    methods,
+    parallel,
+    progress,
+    stats,
+    utils
+Suggests:
     fdasrvf,
     BASS,
     BayesPPR,

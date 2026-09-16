@@ -9,7 +9,7 @@ evalm(obj, ...)
 \arguments{
 \item{obj}{evalm object}
 
-\item{...}{additional arugments passed to method}
+\item{...}{additional arguments passed to method}
 }
 \value{
 An object of class `evalm`

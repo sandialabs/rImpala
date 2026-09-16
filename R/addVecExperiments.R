@@ -75,7 +75,7 @@ addVecExperiments <- function(obj,
     obj$s2_exp_ind = list(1:length(sd_est))
     obj$ns2 = list(length(sd_est))
     obj$ny_s2 = list(vec)
-    if (sum(s2_df == 0) > 1) {
+    if (any(s2_df == 0)) {
       obj$s2_prior_kern = list(ldhc_kern)
     } else {
       obj$s2_prior_kern = list(ldig_kern)
@@ -93,7 +93,7 @@ addVecExperiments <- function(obj,
     obj$s2_exp_ind[[N + 1]] = 1:length(sd_est)
     obj$ns2[[N + 1]] = length(sd_est)
     obj$ny_s2[[N + 1]] = vec
-    if (sum(s2_df == 0) > 1) {
+    if (any(s2_df == 0)) {
       obj$s2_prior_kern[[N + 1]] = ldhc_kern
     } else {
       obj$s2_prior_kern[[N + 1]] = ldig_kern

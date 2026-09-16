@@ -46,12 +46,13 @@ CalibSetup <- function(bounds, constraint_func) {
     s2_ind = NULL,
     s2_exp_ind = NULL,
     ns2 = NULL,
-    s2_exp_ind = NULL,
-    ns2 = NULL,
     ny_s2 = NULL,
     ntheta = c(),
     theta_ind = NULL,
     nswap = 5,
+    nswap_per = 0,
+    start_temper = Inf,
+    theta_prior = NULL,
     s2_prior_kern = NULL
   )
 

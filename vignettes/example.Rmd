@@ -1,5 +1,5 @@
 ---
-title: "EFMBC Exmaple"
+title: "EFMBC Example"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{example}
@@ -13,6 +13,21 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 knitr::opts_chunk$set(fig.width = 6, fig.height = 6)
+
+# This vignette needs several suggested packages. Skip evaluation when any is
+# missing so the package still checks without them installed.
+.pkgs <- c("BASS", "mvBayes", "fdasrvf", "bayesplot")
+.have_pkgs <- all(vapply(.pkgs, requireNamespace, logical(1), quietly = TRUE))
+knitr::opts_chunk$set(eval = .have_pkgs)
+```
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+if (!.have_pkgs) {
+  cat("> **Note:** this vignette requires the suggested packages ",
+      paste0("`", .pkgs, "`", collapse = ", "),
+      ". They are not all installed, so the code below is shown but not run.\n",
+      sep = "")
+}
 ```
 
 ```{r setup}

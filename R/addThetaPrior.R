@@ -17,7 +17,7 @@ addThetaPrior <- function(obj,
                           pname=NULL
                           ) {
   pnames = names(obj$bounds)
-  if(is.null(pname) | !(pname %in% pnames)){
+  if(is.null(pname) || length(pname) != 1 || !(pname %in% pnames)){
     stop('No parameter name given or parameter not in set of input names for any model in setup$models')
   }
 
