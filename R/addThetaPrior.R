@@ -49,22 +49,30 @@ addThetaPrior <- function(obj,
 #'
 #' @export
 #'
+#' @details
+#' `log_density_fn` receives a named list of parameter *vectors*, one element per
+#' temperature, and must return a vector of log densities of that same length.
+#' Write it vectorised, or wrap a scalar density in [mapply()].
+#'
 #' @examples
-#' # Joint normal prior on t_1 and t_2
+#' # Joint prior on t_1 and t_2 correlating them through a bivariate normal.
+#' # params arrives as list(t_1 = <vector>, t_2 = <vector>), one entry per
+#' # temperature, so the result must be a vector of the same length.
 #' my_joint_prior <- function(params) {
-#'   # params is a list like list(t_1=0.5, t_2=0.3)
-#'   mvtnorm::dmvnorm(c(params$t_1, params$t_2),
-#'                    mean=c(0, 0),
-#'                    sigma=matrix(c(1, 0.5, 0.5, 1), 2, 2),
-#'                    log=TRUE)
+#'   rho <- 0.5
+#'   z <- (params$t_1^2 - 2 * rho * params$t_1 * params$t_2 + params$t_2^2) /
+#'     (1 - rho^2)
+#'   -0.5 * z - log(2 * pi * sqrt(1 - rho^2))
 #' }
 #'
-#' input_names = c("theta0", "theta1", "theta2")
 #' bounds = list()
 #' bounds[['t_1']] = c(0, 1)
 #' bounds[['t_2']] = c(0, 1)
 #' setup <- CalibSetup(bounds, cf_bounds)
 #' setup <- addJointThetaPrior(setup, c("t_1", "t_2"), my_joint_prior)
+#'
+#' # returns one log density per temperature
+#' my_joint_prior(list(t_1 = c(0.2, 0.5), t_2 = c(0.3, 0.6)))
 #'
 addJointThetaPrior <- function(obj,
                                pnames,

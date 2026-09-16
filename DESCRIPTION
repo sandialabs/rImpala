@@ -35,14 +35,9 @@ Imports:
 Suggests:
     fdasrvf,
     BASS,
-    BayesPPR,
     mvBayes,
-    coda,
     bayesplot,
-    gridExtra,
-    hexbin,
     knitr,
-    mvtnorm,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/roxygen2/version: 8.1.0
