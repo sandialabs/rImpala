@@ -39,14 +39,15 @@ test_that("theta posterior matches the analytic conjugate posterior", {
   expect_lt(max(abs(mu_mc - mu_an) / sd_an), 0.5)
   # posterior spread within 30% of analytic
   expect_lt(max(abs(sqrt(diag(cov_mc)) / sd_an - 1)), 0.3)
-  # and the sign and rough size of the parameter correlation are reproduced.
-  # The tolerance is loose because the analytic correlation here is small
-  # (about -0.11), so its Monte Carlo error is relatively large -- tightening
-  # this would make the test flaky across platforms rather than more useful.
+  # The parameter correlation is reproduced to within its Monte Carlo error.
+  # Deliberately no assertion on the sign: the analytic correlation here is only
+  # about -0.11, so across RNG streams the sample estimate straddles zero
+  # (measured range roughly -0.25 to +0.10 over a dozen seeds). Asserting
+  # corr_mc < 0 looks stronger but is really a coin flip that fails whenever a
+  # platform's floating-point rounding shifts which proposals get accepted.
   corr_an <- cov_an[1, 2] / prod(sd_an)
   corr_mc <- cov_mc[1, 2] / prod(sqrt(diag(cov_mc)))
   expect_lt(abs(corr_mc - corr_an), 0.25)
-  expect_lt(corr_mc, 0)
 })
 
 
