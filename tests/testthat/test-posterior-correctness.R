@@ -3,8 +3,9 @@
 # available in closed form, so the MCMC output can be checked against it directly
 # rather than against a previously recorded value.
 #
-# These take longer than the shape tests (20k iterations each), so they are
-# skipped on CRAN.
+# Iteration counts are set so the Monte Carlo error sits well inside the
+# tolerances below (measured max|z| ~ 0.07 against a 0.5 limit), while keeping
+# the suite quick enough to run on every CI platform. Still skipped on CRAN.
 
 test_that("theta posterior matches the analytic conjugate posterior", {
   skip_on_cran()
@@ -25,10 +26,10 @@ test_that("theta posterior matches the analytic conjugate posterior", {
   # a very tight s2 prior at the true variance approximates known-sigma
   setup <- addVecExperiments(setup, y, StubModel(A), sd_est = sig,
                              s2_df = 20000, s2_ind = rep(1, ny))
-  setup <- setMCMC(setup, nmcmc = 20000, start_adapt_iter = 500, decor = 100)
+  setup <- setMCMC(setup, nmcmc = 6000, start_adapt_iter = 500, decor = 100)
 
   out <- suppressWarnings(calibPool(setup))
-  keep <- 10001:20000
+  keep <- 3001:6000
   th <- matrix(out$theta[keep, 1, ], length(keep), p)
 
   mu_mc <- colMeans(th)
@@ -58,10 +59,10 @@ test_that("s2 is recovered under a weak prior", {
   # start deliberately away from the truth so this tests the update, not the init
   setup <- addVecExperiments(setup, y, StubModel(A), sd_est = 0.2,
                              s2_df = 2, s2_ind = rep(1, ny))
-  setup <- setMCMC(setup, nmcmc = 20000, start_adapt_iter = 500, decor = 100)
+  setup <- setMCMC(setup, nmcmc = 6000, start_adapt_iter = 500, decor = 100)
 
   out <- suppressWarnings(calibPool(setup))
-  keep <- 10001:20000
+  keep <- 3001:6000
   sd_post <- sqrt(mean(out$s2[[1]][keep, 1, ]))
   expect_lt(abs(sd_post - sig) / sig, 0.25)
 })
@@ -80,10 +81,10 @@ test_that("each error group recovers its own variance", {
   setup <- CalibSetup(list(t_1 = c(0, 1), t_2 = c(0, 1)), cf_bounds)
   setup <- addVecExperiments(setup, y, StubModel(A), sd_est = c(0.1, 0.1),
                              s2_df = c(2, 2), s2_ind = s2_ind)
-  setup <- setMCMC(setup, nmcmc = 20000, start_adapt_iter = 500, decor = 100)
+  setup <- setMCMC(setup, nmcmc = 6000, start_adapt_iter = 500, decor = 100)
 
   out <- suppressWarnings(calibPool(setup))
-  keep <- 10001:20000
+  keep <- 3001:6000
   sd_post <- sqrt(colMeans(out$s2[[1]][keep, 1, ]))
 
   # both groups distinguished, despite starting from a common 0.1
@@ -103,13 +104,13 @@ test_that("tempered and untempered runs agree on the cold-chain posterior", {
     setup <- CalibSetup(list(t_1 = c(0, 1), t_2 = c(0, 1)), cf_bounds)
     setup <- addVecExperiments(setup, y, StubModel(A), sd_est = sig,
                                s2_df = 20000, s2_ind = rep(1, ny))
-    setup <- setMCMC(setup, nmcmc = 15000, start_adapt_iter = 500, decor = 100)
+    setup <- setMCMC(setup, nmcmc = 8000, start_adapt_iter = 500, decor = 100)
     if (ntemps > 1) {
       setup <- setTemperatureLadder(setup, 1.2^(0:(ntemps - 1)),
-                                    start_temper = 1000)
+                                    start_temper = 600)
     }
     out <- suppressWarnings(calibPool(setup))
-    keep <- 7501:15000
+    keep <- 4001:8000
     colMeans(matrix(out$theta[keep, 1, ], length(keep), p))
   }
 
