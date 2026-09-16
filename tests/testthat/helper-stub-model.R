@@ -47,7 +47,8 @@ registerS3method("lik_cov_inv", "StubModel", lik_cov_inv.StubModel)
 
 # Build a CalibSetup around StubModel for a given shape/mode combination.
 stub_setup <- function(p, ny, ns2, ntemps, s2mode = "gibbs", nmcmc = 400,
-                       s2_df = 20, sd_est = 0.05, prior = FALSE, seed = 42) {
+                       s2_df = 20, sd_est = 0.05, prior = FALSE, seed = 42,
+                       sd_lower = NULL, sd_upper = NULL) {
   set.seed(seed)
   bounds <- list()
   for (j in 1:p) bounds[[paste0("t_", j)]] <- c(0, 1)
@@ -61,7 +62,9 @@ stub_setup <- function(p, ny, ns2, ntemps, s2mode = "gibbs", nmcmc = 400,
     setup, yobs, StubModel(A, s2 = s2mode),
     sd_est = rep(sd_est, ns2),
     s2_df  = rep(s2_df, ns2),
-    s2_ind = rep(1:ns2, length.out = ny)
+    s2_ind = rep(1:ns2, length.out = ny),
+    sd_lower = if (is.null(sd_lower)) NULL else rep(sd_lower, ns2),
+    sd_upper = if (is.null(sd_upper)) NULL else rep(sd_upper, ns2)
   )
   if (prior) {
     setup <- addThetaPrior(setup, "normal", list(mean = 0.5, sd = 0.3), "t_1")

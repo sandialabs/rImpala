@@ -107,6 +107,39 @@ test_that("each error group recovers its own variance", {
 })
 
 
+test_that("a separate variance per component of yobs is recovered", {
+  # s2_ind = seq_along(yobs) learns one sd per component. Each variance then has
+  # a single observation, so the prior does the work -- this uses an informative
+  # s2_df centred on the truth, which is the regime the feature is for. A
+  # collapsed s2_ind mapping would give every component the same variance and
+  # so could not reproduce the 10x split below.
+  set.seed(101)
+  p <- 2; ny <- 24
+  A <- matrix(stats::rnorm(ny * p), ny, p)
+  sd_true <- rep(c(0.02, 0.20), each = ny / 2)
+  y <- as.numeric(A %*% c(0.45, 0.55)) + stats::rnorm(ny, 0, sd_true)
+
+  setup <- CalibSetup(list(t_1 = c(0, 1), t_2 = c(0, 1)), cf_bounds)
+  setup <- addVecExperiments(setup, y, StubModel(A, s2 = "MH"),
+                             sd_est = sd_true, s2_df = rep(50, ny),
+                             s2_ind = seq_len(ny))
+  setup <- setMCMC(setup, nmcmc = 6000, start_adapt_iter = 500, decor = 100)
+
+  out <- suppressWarnings(calibPool(setup))
+  expect_equal(dim(out$s2[[1]]), c(6000, 1, ny))
+
+  keep <- 3001:6000
+  sd_post <- sqrt(colMeans(out$s2[[1]][keep, 1, ]))
+  low <- mean(sd_post[1:(ny / 2)])
+  high <- mean(sd_post[(ny / 2 + 1):ny])
+
+  expect_lt(abs(low - 0.02) / 0.02, 0.3)
+  expect_lt(abs(high - 0.20) / 0.20, 0.3)
+  # the two halves stay clearly separated, which a single shared variance cannot do
+  expect_gt(high / low, 5)
+})
+
+
 test_that("tempered and untempered runs agree on the cold-chain posterior", {
   run <- function(ntemps) {
     set.seed(31)

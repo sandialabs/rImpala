@@ -276,9 +276,10 @@ calibPool <- function(setup) {
         for (t in 1:setup$ntemps) {
           shape_t = itl_mat[[i]][t, ] * (setup$ny_s2[[i]] / 2 + setup$ig_a[[i]] + 1) - 1
           scale_t = 1 / (itl_mat[[i]][t, ] * (setup$ig_b[[i]] + dev_sq[t, ] / 2))
-          log_s2[[i]][m, t, ] = log(1 / stats::rgamma(setup$ns2[[i]],
-                                                     shape = shape_t,
-                                                     scale = scale_t))
+          log_s2[[i]][m, t, ] = log(rig_bounded(shape_t,
+                                                scale_t,
+                                                setup$sd_lower[[i]],
+                                                setup$sd_upper[[i]]))
           tmpi = exp(log_s2[[i]][m, t, ])
           marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]])
           llik_curr[i, t] = llik(
@@ -316,6 +317,12 @@ calibPool <- function(setup) {
         alpha_s2 = alpha_s2 + setup$itl * ls2_rowsum(ls2_candi)
         alpha_s2 = alpha_s2 - setup$itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
         alpha_s2 = alpha_s2 - setup$itl * ls2_rowsum(ls2_curr)
+
+        # Reject candidates outside sd_lower/sd_upper rather than clamping them:
+        # clamping a Metropolis proposal would bias the stationary distribution.
+        # Vacuous unless the user supplied bounds.
+        in_bounds = ls2_in_bounds(ls2_candi, setup$sd_lower[[i]], setup$sd_upper[[i]])
+        alpha_s2[!in_bounds] = -Inf
 
         idx = which(log(stats::runif(setup$ntemps)) < alpha_s2)
         for (t in idx) {
