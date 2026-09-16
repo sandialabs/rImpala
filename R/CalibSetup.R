@@ -40,6 +40,8 @@ CalibSetup <- function(bounds, constraint_func) {
     decor = 100,
     ntemps = 1,
     sd_est = NULL,
+    sd_lower = NULL,
+    sd_upper = NULL,
     s2_df = NULL,
     ig_a = NULL,
     ig_b = NULL,

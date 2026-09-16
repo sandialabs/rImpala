@@ -36,6 +36,44 @@ ls2_rowsum <- function(ls2) {
 }
 
 
+# TRUE where every error group of a candidate log-variance row sits inside the
+# bounds implied by sd_lower/sd_upper. Bounds are on the standard deviation, so
+# they are squared and logged to compare against log-variances. Defaults of
+# 0/Inf make this vacuously TRUE, so unbounded runs are unaffected.
+ls2_in_bounds <- function(ls2, sd_lower, sd_upper) {
+  ls2 = as.matrix(ls2)
+  lo = 2 * log(sd_lower)   # -Inf when sd_lower == 0
+  hi = 2 * log(sd_upper)   #  Inf when sd_upper == Inf
+  # compare group-wise by transposing, so lo/hi broadcast down groups
+  ok = (t(ls2) >= lo) & (t(ls2) <= hi)
+  colSums(matrix(!ok, nrow = ncol(ls2))) == 0
+}
+
+
+# Draw inverse-gamma variances truncated to [sd_lower^2, sd_upper^2] on the
+# variance scale. Rejection-samples the offending groups, then clamps whatever
+# is still outside after `maxit` tries so a tight bound cannot hang the chain.
+# Mirrors the retry-then-clamp scheme in python impala.
+rig_bounded <- function(shape, scale, sd_lower, sd_upper, maxit = 50) {
+  n = length(shape)
+  s2 = 1 / stats::rgamma(n, shape = shape, scale = scale)
+  lo = sd_lower^2
+  hi = sd_upper^2
+  bad = (s2 < lo) | (s2 > hi)
+  it = 0
+  while (any(bad) && it < maxit) {
+    s2[bad] = 1 / stats::rgamma(sum(bad),
+                                shape = shape[bad],
+                                scale = scale[bad])
+    bad = (s2 < lo) | (s2 > hi)
+    it = it + 1
+  }
+  s2[s2 < lo] = lo[s2 < lo]
+  s2[s2 > hi] = hi[s2 > hi]
+  s2
+}
+
+
 swm <- function(Ainv, U, Cinv, V, Aldet, Cldet) {
   in_mat = chol_solve(Cinv + V %*% Ainv %*% U)
   inv1 = Ainv - Ainv %*% U %*% in_mat$inv %*% V %*% Ainv

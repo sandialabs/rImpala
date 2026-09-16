@@ -106,7 +106,9 @@ evalm.ModelBassPca_func <- function(obj,
     cli::cli_abort("Not Implemented")
   }
 
-  pred[1, , ]
+  # keep the (ntemps x ny) shape: pred[1, , ] drops to a bare vector whenever
+  # ntemps == 1 or ny == 1, which then fails downstream in calibPool
+  matrix(pred[1, , ], nrow = dim(pred)[2], ncol = dim(pred)[3])
 }
 
 
