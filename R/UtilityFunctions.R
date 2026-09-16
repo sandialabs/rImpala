@@ -20,6 +20,22 @@ ldig_kern <- function(x, a, b) {
 }
 
 
+# Sum an s2 prior kernel over error groups, per temperature.
+# `ls2` is (ntemps x ns2) on the log scale; `a`/`b` are length-ns2 hyperparameters.
+# Transposing first makes the kernel broadcast a/b across error groups (rows)
+# rather than recycling them down temperatures, then colSums reduces over groups.
+s2_kern_sum <- function(kern, ls2, a, b) {
+  ls2 = as.matrix(ls2)
+  colSums(matrix(kern(exp(t(ls2)), a, b), nrow = ncol(ls2)))
+}
+
+
+# Sum log-variances over error groups, per temperature: length-ntemps result.
+ls2_rowsum <- function(ls2) {
+  rowSums(as.matrix(ls2))
+}
+
+
 swm <- function(Ainv, U, Cinv, V, Aldet, Cldet) {
   in_mat = chol_solve(Cinv + V %*% Ainv %*% U)
   inv1 = Ainv - Ainv %*% U %*% in_mat$inv %*% V %*% Ainv
@@ -32,7 +48,7 @@ swm <- function(Ainv, U, Cinv, V, Aldet, Cldet) {
 chol_solve <- function(x) {
   R = chol(x)
   ldet = 2 * sum(log(diag(R)))
-  inv1 = solve(x)
+  inv1 = chol2inv(R)
   out = list(inv = inv1, ldet = ldet)
   out
 }
@@ -69,9 +85,7 @@ cf_bounds <- function(x, bounds) {
 normalize <- function(x, bounds) {
   m = bounds[, 1]
   diff = (bounds[, 2] - bounds[, 1])
-  diff_tmp = t(replicate(nrow(x), diff))
-  mtmp = t(replicate(nrow(x), m))
-  out = (x - mtmp) / diff
+  out = sweep(sweep(x, 2, m), 2, diff, "/")
   out
 }
 
@@ -152,18 +166,14 @@ eval_theta_priors = function(theta, priors, tnames=NULL){
 }
 
 
+# Per-temperature sample covariance of an (N x ntemps x p) array of draws.
+# `mean` is the (ntemps x p) running mean. Returns (ntemps x p x p).
 cov_3d_pcm <- function(arr, mean) {
-  N = nrow(arr)
-  if (ndims(arr) == 3) {
-    meantmp = replicate(N, mean, simplify = "array")
-    meantmp = aperm(meantmp, c(3, 1, 2))
-    out = einsum::einsum('kij,kil->ijl', arr - meantmp, arr - meantmp) / (N - 1)
-  } else if (ndims(arr) == 2) {
-    meantmp = replicate(N, mean, simplify = "array")
-    meantmp = aperm(meantmp, c(2, 1))
-    tmp = array(arr - meantmp, dim = c(nrow(arr), ncol(arr), 1))
-    out = einsum::einsum('kij,kil->ijl', tmp, tmp) / (N - 1)
-    out = out[, , 1]
-  }
-  out
+  stopifnot(ndims(arr) == 3)
+  N = dim(arr)[1]
+  # broadcast the (ntemps x p) mean over N draws without relying on replicate(),
+  # which collapses to a bare vector when mean is 1 x 1
+  meantmp = aperm(array(mean, dim = c(dim(arr)[2], dim(arr)[3], N)), c(3, 1, 2))
+  dev = arr - meantmp
+  einsum::einsum('kij,kil->ijl', dev, dev) / (N - 1)
 }

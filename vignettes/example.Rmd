@@ -1,5 +1,5 @@
 ---
-title: "EFMBC Exmaple"
+title: "EFMBC Example"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{example}
@@ -13,6 +13,34 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 knitr::opts_chunk$set(fig.width = 6, fig.height = 6)
+
+# This vignette needs several suggested packages, and mvBayes calls
+# parallel::detectCores() unguarded -- that returns NA in some sandboxed or
+# containerised environments. Skip evaluation rather than fail the build when
+# either prerequisite is missing.
+#
+# hexbin and gridExtra are needed by the mcmc_pairs() call near the end:
+# bayesplot lists both in its own Suggests rather than Imports, so neither
+# arrives with bayesplot, and off_diag_fun = "hex" fails without hexbin.
+# Neither package name appears anywhere else in the sources, so grepping for
+# them turns up nothing -- keep them listed here and in DESCRIPTION.
+.pkgs <- c("BASS", "mvBayes", "fdasrvf", "bayesplot", "hexbin", "gridExtra")
+.have_pkgs <- all(vapply(.pkgs, requireNamespace, logical(1), quietly = TRUE))
+.have_cores <- !is.na(parallel::detectCores())
+.can_run <- .have_pkgs && .have_cores
+knitr::opts_chunk$set(eval = .can_run)
+```
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+if (!.have_pkgs) {
+  cat("> **Note:** this vignette requires the suggested packages ",
+      paste0("`", .pkgs, "`", collapse = ", "),
+      ". They are not all installed, so the code below is shown but not run.\n",
+      sep = "")
+} else if (!.have_cores) {
+  cat("> **Note:** `parallel::detectCores()` returns `NA` in this environment,",
+      "which the emulator packages require. The code below is shown but not run.\n")
+}
 ```
 
 ```{r setup}
