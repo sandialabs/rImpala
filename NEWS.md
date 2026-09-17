@@ -1,4 +1,6 @@
 # impala (development version)
+* add `fixTheta()`/`unfixTheta()` to hold calibration parameters at fixed values,
+  supporting conditional and cut-Bayes inference
 * add ability to specify priors for theta (#8)
 * cleaned up documentation
 * numerical bugfixes

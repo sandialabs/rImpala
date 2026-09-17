@@ -20,6 +20,9 @@ An object of class `CalibSetup` which is a list with the following
   components:
 
 - `nexp`: number of experiments
+
+- `theta_fixed`: named vector of parameters held fixed during calibration,
+  `NULL` until [fixTheta()] is called
 }
 \description{
 This function setups up calibration object
