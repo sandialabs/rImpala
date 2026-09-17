@@ -161,6 +161,24 @@ setup = setMCMC(setup, 4000, 2000, 1, 10)
 out_cal = calibPool(setup)
 ```
 
+Fixing inputs for conditional inference
+
+Sometimes an input is known independently, or is determined by a separate
+module that should not be updated by these data -- the cut-Bayes situation.
+`fixTheta()` pins such inputs, so `calibPool()` samples the conditional
+posterior of the remaining ones. Fixed parameters keep their column in
+`out_cal$theta`, constant at the value given; the proposal and decorrelation
+steps act on the free parameters only. `unfixTheta()` reverses it.
+
+```{r fixed, eval = FALSE}
+# hold theta2 at 0.5 and calibrate theta0 and theta1 conditional on it
+setup_cut = fixTheta(setup, "theta2", 0.5)
+out_cut = calibPool(setup_cut)
+
+out_cut$theta_fixed
+all(out_cut$theta_native$theta2 == 0.5)  # TRUE
+```
+
 Look at posteriors and chain diagnostics
 
 ```{r plots}

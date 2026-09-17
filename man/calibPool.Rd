@@ -22,8 +22,15 @@ a list with the following elements
 - discrep_vars: discrepancy coefficients
 - llik: log likelihood
 - theta_native: mcmc samples of variables in native scale
+- theta_fixed: named vector of parameters held fixed, or `NULL` if none
 }
 \description{
 This function runs pooled Bayesian Model Calibration with adaptive MCMC,
 tempering, and decorrelation steps. input theta will be normalized to 0-1 and sampled from uniform priors
+}
+\details{
+Parameters fixed with [fixTheta()] are held at their given values
+  throughout: they keep their column in `theta` and `theta_native`, constant
+  at the fixed value, while the Metropolis proposal and the decorrelation
+  step act on the free parameters only.
 }
