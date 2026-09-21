@@ -39,10 +39,26 @@ lik_cov_inv.StubModel <- function(obj, s2vec, ...) {
   list(inv = chol2inv(R), ldet = 2 * sum(log(diag(R))))
 }
 
+# Conjugate Gaussian discrepancy draw, exercised only when the model carries a
+# discrepancy basis D (nd > 0). Given residual r = yobs - pred with likelihood
+# precision cov$inv and a N(0, discrep_tau * I) prior on the coefficients b
+# (discrepancy = D %*% b), the posterior of b is Gaussian with precision
+# tempered by itl. Returns the length-nd coefficient vector calibPool expects.
+discrep_sample.StubModel <- function(obj, yobs, pred, cov, itl, ...) {
+  D <- obj$D
+  r <- as.numeric(yobs - pred)
+  prec <- itl * (t(D) %*% cov$inv %*% D) + diag(obj$nd) / obj$discrep_tau
+  R <- chol(prec)
+  post_cov <- chol2inv(R)
+  mean <- itl * (post_cov %*% (t(D) %*% (cov$inv %*% r)))
+  as.numeric(mean + t(chol(post_cov)) %*% stats::rnorm(obj$nd))
+}
+
 registerS3method("evalm", "StubModel", evalm.StubModel)
 registerS3method("step_m", "StubModel", step_m.StubModel)
 registerS3method("llik", "StubModel", llik.StubModel)
 registerS3method("lik_cov_inv", "StubModel", lik_cov_inv.StubModel)
+registerS3method("discrep_sample", "StubModel", discrep_sample.StubModel)
 
 
 # Build a CalibSetup around StubModel for a given shape/mode combination.
