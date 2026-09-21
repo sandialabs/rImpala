@@ -11,6 +11,8 @@ addVecExperiments(
   sd_est,
   s2_df,
   s2_ind,
+  sd_lower = NULL,
+  sd_upper = NULL,
   meas_error_cor = NULL,
   theta_ind = NULL,
   D = NULL,
@@ -25,11 +27,27 @@ addVecExperiments(
 \item{model}{emulator (currently expecting a object of class
 `ModelBassPca_func` or `ModelmvBayes`)}
 
-\item{sd_est}{estimate of standard deviation}
+\item{sd_est}{vector of initial standard deviation estimates, one per
+separately estimated measurement error variance. `length(sd_est)` sets the
+number of variance groups.}
 
-\item{s2_df}{degrees of freedom of inverse gamma prior}
+\item{s2_df}{vector of inverse gamma prior degrees of freedom, one per
+variance group, so `length(s2_df)` must equal `length(sd_est)`. A value of
+zero selects a half-Cauchy prior instead; if any entry is zero the
+half-Cauchy is used for every group.}
 
-\item{s2_ind}{indices of function}
+\item{s2_ind}{vector of 1-based variance group indices, one per element of
+`yobs`, mapping each observation to the variance it is drawn with. Must
+satisfy `length(s2_ind) == length(yobs)` and
+`max(s2_ind) <= length(sd_est)`.}
+
+\item{sd_lower}{optional vector of lower bounds on the learned standard
+deviations, one per variance group (default: `NULL`, meaning no lower
+bound)}
+
+\item{sd_upper}{optional vector of upper bounds on the learned standard
+deviations, one per variance group (default: `NULL`, meaning no upper
+bound)}
 
 \item{meas_error_cor}{measurement error correlation (default: `NULL`)}
 
@@ -45,4 +63,47 @@ An object of class `CalibSetup`
 }
 \description{
 This method adds vector experiments to calibration object
+}
+\details{
+`sd_est`, `s2_df`, `sd_lower` and `sd_upper` are all indexed by variance
+group, while `s2_ind` is indexed by observation. A scalar `sd_est` with
+`s2_ind = rep(1, length(yobs))` gives the usual single measurement error
+variance for the whole vector.
+
+Any grouping of the observations is allowed. Passing
+`s2_ind = seq_along(yobs)` with `sd_est` of that same length learns a
+separate standard deviation for every component of `yobs`. Note that each
+variance is then informed by a single observation, so the prior set through
+`s2_df` and `sd_est` does most of the work; use a larger `s2_df`, or
+`sd_lower`/`sd_upper`, when the per component variances need to be
+constrained.
+}
+\examples{
+set.seed(1)
+ny <- 20
+A <- matrix(stats::rnorm(ny * 2), ny, 2)
+yobs <- as.numeric(A \%*\% c(0.45, 0.55)) + stats::rnorm(ny, 0, 0.05)
+
+# a minimal linear emulator standing in for a fitted surrogate
+mod <- structure(list(s2 = "gibbs", nd = 0, stochastic = FALSE,
+                      discrep_cov = diag(ny) * 1e-12), class = "ExampleModel")
+
+setup <- CalibSetup(list(t_1 = c(0, 1), t_2 = c(0, 1)), cf_bounds)
+
+# two error groups: the first half of yobs shares one variance, the rest another
+two_group <- addVecExperiments(setup, yobs, mod,
+                               sd_est = c(0.05, 0.05),
+                               s2_df  = c(2, 2),
+                               s2_ind = rep(1:2, each = ny / 2))
+two_group$ns2[[1]]
+
+# one standard deviation per component of yobs, bounded away from zero
+per_component <- addVecExperiments(setup, yobs, mod,
+                                   sd_est   = rep(0.05, ny),
+                                   s2_df    = rep(10, ny),
+                                   s2_ind   = seq_along(yobs),
+                                   sd_lower = rep(0.01, ny),
+                                   sd_upper = rep(0.50, ny))
+per_component$ns2[[1]]
+
 }

@@ -152,11 +152,9 @@ evalm.ModelmvBayes <- function(obj,
   }
 
   if (ndims(pred) == 3){
-    out = pred[1, ,]
-    if (dim(pred)[3] == 1){
-      out = t(t(out))
-    }
-    return(out)
+    # keep the (ntemps x ny) shape: pred[1, , ] drops to a bare vector when
+    # either ntemps == 1 or ny == 1
+    return(matrix(pred[1, , ], nrow = dim(pred)[2], ncol = dim(pred)[3]))
   } else {
     return(pred)
   }
