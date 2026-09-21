@@ -88,6 +88,90 @@ test_that("s2_df = 0 selects the half-Cauchy kernel for one group too", {
 })
 
 
+test_that("addVecExperiments rejects malformed s2 groupings", {
+  set.seed(11)
+  ny <- 20
+  A <- matrix(stats::rnorm(ny), ny, 1)
+  y <- stats::rnorm(ny)
+  mk <- function(...) {
+    setup <- CalibSetup(list(a = c(0, 1)), cf_bounds)
+    addVecExperiments(setup, y, StubModel(A), ...)
+  }
+
+  # Each of these used to be accepted silently and either dropped observations
+  # or corrupted ig_a/ig_b, sometimes only failing much later inside calibPool.
+  # The 0-based case is the one Python users hit: it left a group with no data.
+  expect_error(mk(sd_est = rep(0.1, 2), s2_df = rep(2, 2),
+                  s2_ind = rep(0:1, each = ny / 2)),
+               "must be 1-based")
+  expect_error(mk(sd_est = rep(0.1, 2), s2_df = rep(2, 2),
+                  s2_ind = rep(1:3, length.out = ny)),
+               "must lie between 1 and")
+  expect_error(mk(sd_est = 0.1, s2_df = 2, s2_ind = rep(1, ny - 5)),
+               "every element of")
+  expect_error(mk(sd_est = rep(0.1, 3), s2_df = rep(2, 2),
+                  s2_ind = rep(1:3, length.out = ny)),
+               "one entry per variance group")
+  expect_error(mk(sd_est = c(-0.1, 0.1), s2_df = c(2, 2),
+                  s2_ind = rep(1:2, each = ny / 2)),
+               "strictly positive")
+  expect_error(mk(sd_est = 0.1, s2_df = 2, s2_ind = c(1.5, rep(1, ny - 1))),
+               "whole numbers")
+
+  # a group with no observations is legal but prior-driven, so warn rather than stop
+  expect_warning(mk(sd_est = rep(0.1, 3), s2_df = rep(2, 3),
+                    s2_ind = rep(c(1, 3), each = ny / 2)),
+                 "no observations")
+})
+
+
+test_that("addVecExperiments supports one variance per component of yobs", {
+  set.seed(13)
+  ny <- 15
+  A <- matrix(stats::rnorm(ny), ny, 1)
+  setup <- CalibSetup(list(a = c(0, 1)), cf_bounds)
+
+  setup <- addVecExperiments(setup, stats::rnorm(ny), StubModel(A),
+                             sd_est = rep(0.1, ny), s2_df = rep(2, ny),
+                             s2_ind = seq_len(ny))
+  expect_equal(setup$ns2[[1]], ny)
+  # every component is its own group, so each holds exactly one observation
+  expect_equal(setup$ny_s2[[1]], rep(1, ny))
+  expect_length(setup$ig_a[[1]], ny)
+  expect_length(setup$ig_b[[1]], ny)
+})
+
+
+test_that("addVecExperiments validates and defaults the sd bounds", {
+  set.seed(17)
+  ny <- 12
+  A <- matrix(stats::rnorm(ny), ny, 1)
+  y <- stats::rnorm(ny)
+  mk <- function(...) {
+    setup <- CalibSetup(list(a = c(0, 1)), cf_bounds)
+    addVecExperiments(setup, y, StubModel(A), sd_est = c(0.1, 0.1),
+                      s2_df = c(2, 2), s2_ind = rep(1:2, each = ny / 2), ...)
+  }
+
+  # unset bounds become the open interval, so sampling is unconstrained
+  unbounded <- mk()
+  expect_equal(unbounded$sd_lower[[1]], c(0, 0))
+  expect_equal(unbounded$sd_upper[[1]], c(Inf, Inf))
+
+  bounded <- mk(sd_lower = c(0.01, 0.02), sd_upper = c(0.5, 0.6))
+  expect_equal(bounded$sd_lower[[1]], c(0.01, 0.02))
+  expect_equal(bounded$sd_upper[[1]], c(0.5, 0.6))
+
+  expect_error(mk(sd_lower = 0.01), "one entry per variance group")
+  expect_error(mk(sd_lower = c(0.5, 0.5), sd_upper = c(0.2, 0.2)),
+               "strictly less than")
+  expect_error(mk(sd_lower = c(-1, 0), sd_upper = c(1, 1)), "non-negative")
+  # the chain starts at sd_est, so a start outside the bounds could never move
+  expect_error(mk(sd_lower = c(0.2, 0.2), sd_upper = c(0.5, 0.5)),
+               "must lie within")
+})
+
+
 test_that("addThetaPrior validates the parameter name", {
   setup <- CalibSetup(list(t_1 = c(0, 1), t_2 = c(0, 1)), cf_bounds)
 

@@ -115,7 +115,9 @@ evalm.ModelmvBayes_GP <- function(obj,
   }
 
   if (ndims(pred) == 3){
-    return(pred[1, , ])
+    # keep the (ntemps x ny) shape: pred[1, , ] drops to a bare vector when
+    # either ntemps == 1 or ny == 1
+    return(matrix(pred[1, , ], nrow = dim(pred)[2], ncol = dim(pred)[3]))
   } else {
     return(pred)
   }

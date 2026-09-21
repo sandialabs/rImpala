@@ -10,7 +10,10 @@ cases <- list(
   list(label = "p=3 ns2=1 ntemps=4 tempered", p = 3, ny = 20, ns2 = 1, ntemps = 4, mode = "gibbs"),
   list(label = "p=3 ns2=4 ntemps=4 multi-s2", p = 3, ny = 20, ns2 = 4, ntemps = 4, mode = "gibbs"),
   list(label = "p=2 ns2=3 ntemps=3 mh",       p = 2, ny = 18, ns2 = 3, ntemps = 3, mode = "mh"),
-  list(label = "p=1 ns2=1 ntemps=1 mh",       p = 1, ny = 12, ns2 = 1, ntemps = 1, mode = "mh")
+  list(label = "p=1 ns2=1 ntemps=1 mh",       p = 1, ny = 12, ns2 = 1, ntemps = 1, mode = "mh"),
+  # ns2 == ny: a separate variance for every component of yobs
+  list(label = "p=2 ns2=ny=12 ntemps=1 gibbs", p = 2, ny = 12, ns2 = 12, ntemps = 1, mode = "gibbs"),
+  list(label = "p=2 ns2=ny=12 ntemps=3 mh",    p = 2, ny = 12, ns2 = 12, ntemps = 3, mode = "mh")
 )
 
 for (cs in cases) {
@@ -71,6 +74,46 @@ test_that("s2 chains start from sd_est rather than a constant", {
   # iteration 1 of every temperature/group should be sd_est^2, not exp(1)
   expect_equal(as.numeric(out$s2[[1]][1, , ]),
                rep(0.05^2, 3 * 2), tolerance = 1e-10)
+})
+
+
+test_that("sd_lower and sd_upper confine every s2 draw", {
+  # Unbounded, this configuration wanders well above 0.09 (measured maxima of
+  # 0.32 under M-H and 0.84 under Gibbs), so the bounds genuinely bite here
+  # rather than being satisfied by accident.
+  for (mode in c("gibbs", "mh")) {
+    fx <- stub_setup(2, 20, 2, 3, s2mode = mode, s2_df = 2, sd_est = 0.05,
+                     sd_lower = 0.02, sd_upper = 0.09, nmcmc = 800)
+    out <- suppressWarnings(calibPool(fx$setup))
+    sd_draws <- sqrt(out$s2[[1]])
+
+    expect_true(all(sd_draws >= 0.02 - 1e-12),
+                info = paste(mode, "respects sd_lower"))
+    expect_true(all(sd_draws <= 0.09 + 1e-12),
+                info = paste(mode, "respects sd_upper"))
+    # bounding the variance must not break theta recovery
+    keep <- (fx$nmcmc %/% 2):fx$nmcmc
+    post <- matrix(out$theta[keep, 1, ], length(keep), 2)
+    expect_lt(max(abs(colMeans(post) - fx$theta_true)), 0.35)
+  }
+})
+
+
+test_that("omitting the sd bounds leaves the sampler untouched", {
+  # The defaults must be inert: unset bounds become (0, Inf) and take neither
+  # the Gibbs rejection path nor the M-H rejection path.
+  for (mode in c("gibbs", "mh")) {
+    run <- function(sd_lower, sd_upper) {
+      fx <- stub_setup(2, 16, 2, 2, s2mode = mode, nmcmc = 400,
+                       sd_lower = sd_lower, sd_upper = sd_upper)
+      set.seed(4242)
+      suppressWarnings(calibPool(fx$setup))
+    }
+    default <- run(NULL, NULL)
+    explicit <- run(0, Inf)
+    expect_identical(default$theta, explicit$theta)
+    expect_identical(default$s2, explicit$s2)
+  }
 })
 
 

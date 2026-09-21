@@ -121,9 +121,12 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
       }
 
       M = dim(predf)[3]
-      pred = fdasrvf::warp_f_gamma(predf[1, , ],
-                                   seq(0, 1, length.out = M),
-                                   fdasrvf::invertGamma(gam))
+      # single temperature: warp_f_gamma returns a bare vector, but calibPool
+      # indexes the result as (ntemps x ny), so keep the leading dimension
+      pred = matrix(fdasrvf::warp_f_gamma(predf[1, , ],
+                                          seq(0, 1, length.out = M),
+                                          fdasrvf::invertGamma(gam)),
+                    nrow = 1)
 
     } else {
       if (obj$h) {
@@ -132,7 +135,7 @@ evalm.ModelmvBayes_elastic_GP <- function(obj,
         gam = fdasrvf::v_to_gam(t(predv[1, , ]))
       }
 
-      pred = predf[1, , ]
+      pred = matrix(predf[1, , ], nrow = dim(predf)[2], ncol = dim(predf)[3])
 
       for (i in 1:ncol(gam)) {
         pred[i, ] = fdasrvf::warp_f_gamma(predf[1, i, ],
