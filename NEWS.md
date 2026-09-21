@@ -1,4 +1,6 @@
 # impala (development version)
+* add `fixTheta()`/`unfixTheta()` to hold calibration parameters at fixed values,
+  supporting conditional and cut-Bayes inference
 * document that `sd_est`, `s2_df` and `s2_ind` in `addVecExperiments()` are
   indexed by measurement error group, so a separate standard deviation can be
   learned per group -- including one per component of `yobs` via

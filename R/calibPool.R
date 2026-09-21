@@ -17,12 +17,25 @@
 #' - discrep_vars: discrepancy coefficients
 #' - llik: log likelihood
 #' - theta_native: mcmc samples of variables in native scale
+#' - theta_fixed: named vector of parameters held fixed, or `NULL` if none
+#'
+#' @details Parameters fixed with [fixTheta()] are held at their given values
+#'   throughout: they keep their column in `theta` and `theta_native`, constant
+#'   at the fixed value, while the Metropolis proposal and the decorrelation
+#'   step act on the free parameters only.
+#'
 #' @export
 #'
 calibPool <- function(setup) {
   theta = array(0, dim = c(setup$nmcmc, setup$ntemps, setup$p))
   log_s2 <- vector(mode = "list", length = setup$nexp)
   s2_ind_mat <- vector(mode = "list", length = setup$nexp)
+
+  # fixed/free split of the calibration parameters; free_idx is every parameter
+  # when nothing has been fixed with fixTheta()
+  split = fixed_theta_split(setup)
+  free_idx = split$free_idx
+  p_free = length(free_idx)
 
   for (i in 1:setup$nexp) {
     log_s2[[i]] = array(1, dim = c(setup$nmcmc, setup$ntemps, setup$ns2[[i]]))
@@ -36,13 +49,28 @@ calibPool <- function(setup) {
   }
 
   theta_start = matrix(stats::runif(setup$ntemps * setup$p), setup$ntemps)
+  # fixed parameters start at, and stay at, their given value on the unit scale
+  theta_start = set_fixed_cols(theta_start, split)
 
   good = setup$checkConstraints(tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)),
                                 setup$bounds)
 
+  # a constraint function can rule out every draw once some parameters are
+  # pinned, so give up rather than spin forever
+  tries = 0
   while (any(!good)) {
-    theta_start[!good, ] = matrix(stats::runif(sum(!good) * setup$p), sum(!good))
-    good[!good] = setup$checkConstraints(tran_unif(theta_start[!good, ], setup$bounds_mat, names(setup$bounds)),
+    tries = tries + 1
+    if (p_free == 0 || tries > 1e4) {
+      stop(
+        "Could not find a starting value satisfying the constraints with the ",
+        "fixed parameter values supplied to fixTheta()."
+      )
+    }
+    nbad = sum(!good)
+    cand = matrix(stats::runif(nbad * setup$p), nbad)
+    theta_start[!good, ] = set_fixed_cols(cand, split)
+    good[!good] = setup$checkConstraints(tran_unif(matrix(theta_start[!good, ], nbad, setup$p),
+                                                  setup$bounds_mat, names(setup$bounds)),
                                          setup$bounds)
   }
 
@@ -85,9 +113,10 @@ calibPool <- function(setup) {
   lpr_curr = eval_theta_priors(tran_unif(tmp_theta, setup$bounds_mat, names(setup$bounds)),
                                setup$theta_prior)
 
+  # the proposal only covers the free parameters
   cov_theta_cand = AMcov_pool(
     setup$ntemps,
-    setup$p,
+    max(p_free, 1),
     setup$start_var_theta,
     setup$start_adapt_iter,
     setup$start_tau_theta
@@ -165,60 +194,65 @@ calibPool <- function(setup) {
       }
     }
 
-    # adaptive Metropolis for each temperature
-    cov_theta_cand = update_m(cov_theta_cand, theta, m)
+    # adaptive Metropolis for each temperature, over the free parameters only.
+    # With every parameter fixed there is nothing to propose, so the whole block
+    # is skipped and only s2/discrepancy are updated.
+    if (p_free > 0) {
+      cov_theta_cand = update_m(cov_theta_cand, theta, m, cols = free_idx)
 
-    # generate proposal
-    theta_cand = gen_cand(cov_theta_cand, theta, m)
-    good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                         setup$bounds)
+      # generate proposal, leaving the fixed columns at their current values
+      theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
+      theta_cand[, free_idx] = gen_cand(cov_theta_cand, theta, m, cols = free_idx)
+      good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
+                                           setup$bounds)
 
-    # get predictions and SSE
-    pred_cand = pred_curr
-    llik_cand = llik_curr
-    lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                 setup$theta_prior)
-    if (any(good_values)) {
-      llik_cand[, good_values] = 0
-      for (i in 1:setup$nexp) {
-        theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
-        pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
-                                              tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
-                                              TRUE)
-        for (t in 1:setup$ntemps) {
-          llik_cand[i, t] = llik(
-            setup$models[[i]],
-            setup$ys[[i]] - discrep_curr[[i]][t, ],
-            pred_cand[[i]][t, ],
-            marg_lik_cov_cur[[i]][[t]]
-          )
+      # get predictions and SSE
+      pred_cand = pred_curr
+      llik_cand = llik_curr
+      lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
+                                   setup$theta_prior)
+      if (any(good_values)) {
+        llik_cand[, good_values] = 0
+        for (i in 1:setup$nexp) {
+          theta_tmp = matrix(theta_cand[good_values, ], ncol = setup$p)
+          pred_cand[[i]][good_values, ] = evalm(setup$models[[i]],
+                                                tran_unif(theta_tmp, setup$bounds_mat, names(setup$bounds)),
+                                                TRUE)
+          for (t in 1:setup$ntemps) {
+            llik_cand[i, t] = llik(
+              setup$models[[i]],
+              setup$ys[[i]] - discrep_curr[[i]][t, ],
+              pred_cand[[i]][t, ],
+              marg_lik_cov_cur[[i]][[t]]
+            )
+          }
         }
       }
-    }
 
-    llik_diff = ((colSums(llik_cand) + lpr_cand) - (colSums(llik_curr) + lpr_curr))
-    llik_diff = llik_diff[good_values]
+      llik_diff = ((colSums(llik_cand) + lpr_cand) - (colSums(llik_curr) + lpr_curr))
+      llik_diff = llik_diff[good_values]
 
-    alpha = rep(1, setup$ntemps) * -Inf
-    alpha[good_values] = setup$itl[good_values] * llik_diff
-    idx = which(log(stats::runif(setup$ntemps)) < alpha)
-    for (t in idx) {
-      theta[m, t, ] = theta_cand[t, ]
-      lpr_curr[t] = lpr_cand[t]
-      count[t, t] = count[t, t] + 1
-      for (i in 1:setup$nexp) {
-        llik_curr[i, t] = llik_cand[i, t]
-        pred_curr[[i]][t, ] = pred_cand[[i]][t, ]
+      alpha = rep(1, setup$ntemps) * -Inf
+      alpha[good_values] = setup$itl[good_values] * llik_diff
+      idx = which(log(stats::runif(setup$ntemps)) < alpha)
+      for (t in idx) {
+        theta[m, t, ] = theta_cand[t, ]
+        lpr_curr[t] = lpr_cand[t]
+        count[t, t] = count[t, t] + 1
+        for (i in 1:setup$nexp) {
+          llik_curr[i, t] = llik_cand[i, t]
+          pred_curr[[i]][t, ] = pred_cand[[i]][t, ]
+        }
+        cov_theta_cand$count_100[t] = cov_theta_cand$count_100[t] + 1
       }
-      cov_theta_cand$count_100[t] = cov_theta_cand$count_100[t] + 1
+
+      # diminishing adaptation based on acceptance rate for each temperature
+      cov_theta_cand = update_tau(cov_theta_cand, m)
     }
 
-    # diminishing adaptation based on acceptance rate for each temperature
-    cov_theta_cand = update_tau(cov_theta_cand, m)
-
-    # decorrelation step
-    if (m %% setup$decor == 0) {
-      for (k in 1:setup$p) {
+    # decorrelation step, over the free parameters only
+    if ((m %% setup$decor == 0) & (p_free > 0)) {
+      for (k in free_idx) {
         theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
         theta_cand[, k] = stats::runif(setup$ntemps)
         good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
@@ -434,7 +468,8 @@ calibPool <- function(setup) {
     pred_curr = pred_curr,
     discrep_vars = discrep_vars,
     llik = llik,
-    theta_native = data.frame(theta_native)
+    theta_native = data.frame(theta_native),
+    theta_fixed = setup$theta_fixed
   )
 
   out

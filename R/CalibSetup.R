@@ -13,6 +13,9 @@
 #'
 #' - `nexp`: number of experiments
 #'
+#' - `theta_fixed`: named vector of parameters held fixed during calibration,
+#'   `NULL` until [fixTheta()] is called
+#'
 #' @export
 #'
 
@@ -55,6 +58,7 @@ CalibSetup <- function(bounds, constraint_func) {
     nswap_per = 0,
     start_temper = Inf,
     theta_prior = NULL,
+    theta_fixed = NULL,
     s2_prior_kern = NULL
   )
 
