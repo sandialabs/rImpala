@@ -59,7 +59,18 @@ CalibSetup <- function(bounds, constraint_func) {
     start_temper = Inf,
     theta_prior = NULL,
     theta_fixed = NULL,
-    s2_prior_kern = NULL
+    s2_prior_kern = NULL,
+    wt = NULL,
+    # hierarchical / clustered calibration, see setHierPriors()/setClusterPriors()
+    theta0_prior_mean = NULL,
+    theta0_prior_cov = NULL,
+    Sigma0_prior_df = NULL,
+    Sigma0_prior_scale = NULL,
+    theta0_start = NULL,
+    nclustmax = NULL,
+    eta_prior_shape = 2,
+    eta_prior_rate = 0.1,
+    scale_proposal = FALSE
   )
 
   class(out) <- "CalibSetup"

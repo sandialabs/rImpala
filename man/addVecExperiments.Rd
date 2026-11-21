@@ -16,7 +16,8 @@ addVecExperiments(
   meas_error_cor = NULL,
   theta_ind = NULL,
   D = NULL,
-  discrep_tau = 1
+  discrep_tau = 1,
+  wt = NULL
 )
 }
 \arguments{
@@ -51,12 +52,26 @@ bound)}
 
 \item{meas_error_cor}{measurement error correlation (default: `NULL`)}
 
-\item{theta_ind}{indices of theta (default: `NULL`)}
+\item{theta_ind}{optional vector of 1-based calibration parameter indices,
+one per element of `yobs`, mapping each observation to the parameter
+vector \eqn{\theta_j} it is predicted with. Only used by [calibHier()] and
+[calibClust()], which give each index its own \eqn{\theta_j};
+[calibPool()] uses a single \eqn{\theta} for everything. The indices must
+be `1, ..., k` with every value present. Default: `NULL`, meaning one
+\eqn{\theta} for the whole vector.}
 
 \item{D}{discrepancy basis (matrix of columns of basis, default:
 `NaN`)}
 
 \item{discrep_tau}{discrepancy sampling tau}
+
+\item{wt}{optional vector of non-negative observation weights, one per
+element of `yobs` (default: `NULL`, meaning every weight is 1). Each
+observation's likelihood contribution is raised to the power of its
+weight, so a weight of 2 counts an observation twice and a weight of 0
+drops it. Weights other than 1 need an emulator that implements them
+(currently [ModelBassPca_func()], or a custom model with
+`supports_wt = TRUE`).}
 }
 \value{
 An object of class `CalibSetup`

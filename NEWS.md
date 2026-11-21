@@ -1,4 +1,20 @@
 # impala (development version)
+* add `calibHier()` for hierarchical calibration, where each `theta_ind` group
+  gets its own parameter drawn from N(theta0, Sigma0), with hyperpriors set by
+  the new `setHierPriors()` (ported from python impala)
+* add `calibClust()` for clustered calibration, where a Dirichlet process
+  groups the `theta_ind` parameters into shared clusters, configured with the
+  new `setClusterPriors()` (ported from python impala)
+* add observation weights: `addVecExperiments(wt = )` raises each
+  observation's likelihood contribution to the power of its weight. Implemented
+  for `ModelBassPca_func()`; custom models opt in with `supports_wt = TRUE`.
+  The Gibbs error variance update uses the weights exactly
+* `theta_ind` in `addVecExperiments()` is now 1-based (default `rep(1, n)`) and
+  validated, matching `s2_ind`
+* emulator `lik_cov_inv()` methods accept `inds` to build the covariance of a
+  subset of the observations
+* `calibPool()` now honours `s2 = 'fix'`, holding the error variance at
+  `sd_est^2` instead of sampling it by Metropolis-Hastings
 * add `fixTheta()`/`unfixTheta()` to hold calibration parameters at fixed values,
   supporting conditional and cut-Bayes inference
 * document that `sd_est`, `s2_df` and `s2_ind` in `addVecExperiments()` are

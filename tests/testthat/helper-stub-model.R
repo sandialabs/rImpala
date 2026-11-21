@@ -3,9 +3,10 @@
 # diagonal likelihood, so the posterior has a closed form -- see
 # test-posterior-correctness.R, which compares against it.
 
-StubModel <- function(A, s2 = "gibbs") {
+StubModel <- function(A, s2 = "gibbs", supports_wt = FALSE) {
   ny <- nrow(A)
   obj <- list(
+    supports_wt = supports_wt,
     A = A,
     ny = ny,
     p = ncol(A),
@@ -29,14 +30,21 @@ evalm.StubModel <- function(obj, parmat, pool = TRUE, nugget = FALSE, ...) {
 
 step_m.StubModel <- function(obj, ...) obj
 
-llik.StubModel <- function(obj, yobs, pred, cov, ...) {
+# Weights (used only when supports_wt = TRUE) give a power likelihood: each
+# residual is scaled by sqrt(wt) and each log variance by wt, matching
+# ModelBassPca_func. `inds` restricts the covariance to a subset of yobs, as
+# calibHier/calibClust request one theta's observations at a time.
+llik.StubModel <- function(obj, yobs, pred, cov, wt = NULL, ...) {
   vec <- c(yobs - pred)
+  if (!is.null(wt)) vec <- sqrt(wt) * vec
   as.numeric(-0.5 * (cov$ldet + t(vec) %*% cov$inv %*% vec))
 }
 
-lik_cov_inv.StubModel <- function(obj, s2vec, ...) {
-  R <- chol(diag(s2vec, nrow = length(s2vec)) + obj$discrep_cov)
-  list(inv = chol2inv(R), ldet = 2 * sum(log(diag(R))))
+lik_cov_inv.StubModel <- function(obj, s2vec, wt = NULL, inds = NULL, ...) {
+  if (is.null(inds)) inds <- seq_along(s2vec)
+  if (is.null(wt)) wt <- rep(1, length(s2vec))
+  v <- s2vec + diag(obj$discrep_cov)[inds]
+  list(inv = diag(1 / v, nrow = length(v)), ldet = sum(wt * log(v)))
 }
 
 # Conjugate Gaussian discrepancy draw, exercised only when the model carries a

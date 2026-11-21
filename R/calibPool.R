@@ -37,6 +37,11 @@ calibPool <- function(setup) {
   free_idx = split$free_idx
   p_free = length(free_idx)
 
+  check_wt_support(setup)
+  # observation weights and the weighted observation count per variance group
+  wt = vector(mode = "list", length = setup$nexp)
+  ny_w = vector(mode = "list", length = setup$nexp)
+
   for (i in 1:setup$nexp) {
     log_s2[[i]] = array(1, dim = c(setup$nmcmc, setup$ntemps, setup$ns2[[i]]))
     # start every temperature from the supplied variance estimates
@@ -46,6 +51,8 @@ calibPool <- function(setup) {
                                 byrow = TRUE)
     # (ny x ns2) indicator mapping each observation to its variance group
     s2_ind_mat[[i]] = outer(setup$s2_ind[[i]], 1:setup$ns2[[i]], "==")
+    wt[[i]] = get_wt(setup, i)
+    ny_w[[i]] = as.numeric(wt[[i]] %*% s2_ind_mat[[i]])
   }
 
   theta_start = matrix(stats::runif(setup$ntemps * setup$p), setup$ntemps)
@@ -90,7 +97,7 @@ calibPool <- function(setup) {
     marg_lik_cov_cur[[i]] = vector(mode = "list", length = setup$ntemps)
     for (t in 1:setup$ntemps) {
       tmp = exp(log_s2[[i]][1, t, ])
-      marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmp[setup$s2_ind[[i]]])
+      marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmp[setup$s2_ind[[i]]], wt = wt[[i]])
     }
   }
 
@@ -104,7 +111,8 @@ calibPool <- function(setup) {
       llik_curr[i, t] = llik(setup$models[[i]],
                              setup$ys[[i]],
                              pred_curr[[i]][t, ],
-                             marg_lik_cov_cur[[i]][[t]])
+                             marg_lik_cov_cur[[i]][[t]],
+                             wt = wt[[i]])
     }
   }
 
@@ -169,7 +177,8 @@ calibPool <- function(setup) {
                                                      setup$ys[[i]],
                                                      pred_curr[[i]][t, ],
                                                      marg_lik_cov_cur[[i]][[t]],
-                                                     setup$itl[t])
+                                                     setup$itl[t],
+                                                     wt = wt[[i]])
           discrep_curr[[i]][t, ] = setup$models[[i]]$D %*% discrep_vars[[i]][m, t, ]
         }
       }
@@ -188,7 +197,8 @@ calibPool <- function(setup) {
             setup$models[[i]],
             setup$ys[[i]] - discrep_curr[[i]][t, ],
             pred_curr[[i]][t, ],
-            marg_lik_cov_cur[[i]][[t]]
+            marg_lik_cov_cur[[i]][[t]],
+            wt = wt[[i]]
           )
         }
       }
@@ -223,7 +233,8 @@ calibPool <- function(setup) {
               setup$models[[i]],
               setup$ys[[i]] - discrep_curr[[i]][t, ],
               pred_cand[[i]][t, ],
-              marg_lik_cov_cur[[i]][[t]]
+              marg_lik_cov_cur[[i]][[t]],
+              wt = wt[[i]]
             )
           }
         }
@@ -274,7 +285,8 @@ calibPool <- function(setup) {
                 setup$models[[i]],
                 setup$ys[[i]] - discrep_curr[[i]][t, ],
                 pred_cand[[i]][t, ],
-                marg_lik_cov_cur[[i]][[t]]
+                marg_lik_cov_cur[[i]][[t]],
+                wt = wt[[i]]
               )
 
             }
@@ -305,24 +317,29 @@ calibPool <- function(setup) {
     for (i in 1:setup$nexp) {
       if (setup$models[[i]]$s2 == 'gibbs') {
         # gibbs update s2
-        # (ntemps x ns2) summed squared deviations per temperature per error group
-        dev_sq = sweep(pred_curr[[i]], 2, setup$ys[[i]])^2 %*% s2_ind_mat[[i]]
+        # (ntemps x ns2) weighted squared deviations per temperature per error group
+        dev_sq = weighted_dev_sq(pred_curr[[i]], setup$ys[[i]], wt[[i]], s2_ind_mat[[i]])
         for (t in 1:setup$ntemps) {
-          shape_t = itl_mat[[i]][t, ] * (setup$ny_s2[[i]] / 2 + setup$ig_a[[i]] + 1) - 1
-          scale_t = 1 / (itl_mat[[i]][t, ] * (setup$ig_b[[i]] + dev_sq[t, ] / 2))
-          log_s2[[i]][m, t, ] = log(rig_bounded(shape_t,
-                                                scale_t,
-                                                setup$sd_lower[[i]],
-                                                setup$sd_upper[[i]]))
+          log_s2[[i]][m, t, ] = gibbs_log_s2(dev_sq[t, ],
+                                             ny_w[[i]],
+                                             itl_mat[[i]][t, ],
+                                             setup$ig_a[[i]],
+                                             setup$ig_b[[i]],
+                                             setup$sd_lower[[i]],
+                                             setup$sd_upper[[i]])
           tmpi = exp(log_s2[[i]][m, t, ])
-          marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]])
+          marg_lik_cov_cur[[i]][[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]], wt = wt[[i]])
           llik_curr[i, t] = llik(
             setup$models[[i]],
             setup$ys[[i]] - discrep_curr[[i]][t, ],
             pred_curr[[i]][t, ],
-            marg_lik_cov_cur[[i]][[t]]
+            marg_lik_cov_cur[[i]][[t]],
+            wt = wt[[i]]
           )
         }
+      } else if (setup$models[[i]]$s2 == 'fix') {
+        # s2 held at sd_est^2: log_s2 was carried over from the previous draw
+        next
       } else {
         # M-H update s2
         cov_ls2_cand[[i]] = update_m(cov_ls2_cand[[i]], log_s2[[i]], m)
@@ -334,12 +351,13 @@ calibPool <- function(setup) {
         for (t in 1:setup$ntemps) {
           tmpi = exp(ls2_candi[t, ])
           tmpi[is.infinite(tmpi)] = 1e100
-          marg_lik_cov_candi[[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]])
+          marg_lik_cov_candi[[t]] = lik_cov_inv(setup$models[[i]], tmpi[setup$s2_ind[[i]]], wt = wt[[i]])
           llik_candi[t] = llik(
             setup$models[[i]],
             setup$ys[[i]] - discrep_curr[[i]][t, ],
             pred_curr[[i]][t, ],
-            marg_lik_cov_candi[[t]]
+            marg_lik_cov_candi[[t]],
+            wt = wt[[i]]
           )
         }
 

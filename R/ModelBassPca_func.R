@@ -59,7 +59,8 @@ ModelBassPca_func <- function(bmod,
     discrep = 0,
     exp_ind = exp_ind,
     nexp = max(exp_ind),
-    s2 = s2
+    s2 = s2,
+    supports_wt = TRUE
   )
 
   class(obj) <- "ModelBassPca_func"
@@ -77,9 +78,10 @@ step_m.ModelBassPca_func <- function(obj, ...) {
 
 
 #' @export
-discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp, ...) {
-  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% cov$inv %*% obj$D
-  m = t(obj$D) %*% cov$inv %*% (yobs - pred)
+discrep_sample.ModelBassPca_func <- function(obj, yobs, pred, cov, itemp, wt = NULL, ...) {
+  inv = weight_inv(cov$inv, wt)
+  S = diag(obj$nd) / obj$discrep_tau + t(obj$D) %*% inv %*% obj$D
+  m = t(obj$D) %*% inv %*% (yobs - pred)
   discrep_vars = chol_sample(solve(S) %*% m, S / itemp)
   discrep_vars
 }
@@ -113,23 +115,41 @@ evalm.ModelBassPca_func <- function(obj,
 
 
 #' @export
-llik.ModelBassPca_func <- function(obj, yobs, pred, cov, ...) {
+llik.ModelBassPca_func <- function(obj, yobs, pred, cov, wt = NULL, ...) {
+  # weights enter as a power likelihood: residuals scaled by sqrt(wt), and the
+  # diagonal part of the log determinant by wt (see lik_cov_inv)
   vec = c(yobs - pred)
+  if (!is.null(wt)) {
+    vec = sqrt(wt) * vec
+  }
   out = -0.5 * (cov$ldet + t(vec) %*% cov$inv %*% vec)
   out
 }
 
 
 #' @export
-lik_cov_inv.ModelBassPca_func <- function(obj, s2vec, ...) {
-  vec = obj$trunc_error_var + s2vec
-  Ainv = diag(1 / vec)
-  Aldet = sum(log(vec))
+lik_cov_inv.ModelBassPca_func <- function(obj, s2vec, wt = NULL, inds = NULL, ...) {
+  # `inds` selects the observations s2vec belongs to, so hierarchical and
+  # clustered calibration can build the covariance of one theta's subset
+  if (is.null(inds)) {
+    inds = seq_along(s2vec)
+  }
+  if (is.null(wt)) {
+    wt = rep(1, length(s2vec))
+  }
+  tev = obj$trunc_error_var
+  if (length(tev) > 1) {
+    tev = tev[inds]
+  }
+  vec = tev + s2vec
+  Ainv = diag(1 / vec, nrow = length(vec))
+  Aldet = sum(wt * log(vec))
+  basis = obj$basis[inds, , drop = FALSE]
   out = swm(
     Ainv,
-    obj$basis,
+    basis,
     diag(1 / obj$emu_vars, nrow = obj$npc),
-    t(obj$basis),
+    t(basis),
     Aldet,
     sum(log(obj$emu_vars))
   )

@@ -171,18 +171,6 @@ llik.ModelmvBayes <- function(obj, yobs, pred, cov, ...) {
 
 
 #' @export
-lik_cov_inv.ModelmvBayes <- function(obj, s2vec, ...) {
-  N = length(s2vec)
-  Sigma = cor2cov(obj$meas_error_corr, sqrt(s2vec))
-  mat = Sigma + obj$trunc_error_var + obj$discrep_cov + obj$basis %*% diag(obj$emu_vars, nrow =
-                                                                             obj$npc) %*% t(obj$basis)
-  R <- tryCatch({
-    chol(mat)
-  }, error = function(e) {
-    chol(mat + 0.0001 * diag(nrow(mat)))
-  })
-  ldet = 2 * sum(log(diag(R)))
-  inv = chol2inv(R)
-  out = list(inv = inv, ldet = ldet)
-  out
+lik_cov_inv.ModelmvBayes <- function(obj, s2vec, inds = NULL, ...) {
+  mv_lik_cov_inv(obj, s2vec, inds)
 }

@@ -24,10 +24,23 @@
 #'   deviations, one per variance group (default: `NULL`, meaning no upper
 #'   bound)
 #' @param meas_error_cor measurement error correlation (default: `NULL`)
-#' @param theta_ind indices of theta (default: `NULL`)
+#' @param theta_ind optional vector of 1-based calibration parameter indices,
+#'   one per element of `yobs`, mapping each observation to the parameter
+#'   vector \eqn{\theta_j} it is predicted with. Only used by [calibHier()] and
+#'   [calibClust()], which give each index its own \eqn{\theta_j};
+#'   [calibPool()] uses a single \eqn{\theta} for everything. The indices must
+#'   be `1, ..., k` with every value present. Default: `NULL`, meaning one
+#'   \eqn{\theta} for the whole vector.
 #' @param D discrepancy basis (matrix of columns of basis, default:
 #'           `NaN`)
 #' @param discrep_tau discrepancy sampling tau
+#' @param wt optional vector of non-negative observation weights, one per
+#'   element of `yobs` (default: `NULL`, meaning every weight is 1). Each
+#'   observation's likelihood contribution is raised to the power of its
+#'   weight, so a weight of 2 counts an observation twice and a weight of 0
+#'   drops it. Weights other than 1 need an emulator that implements them
+#'   (currently [ModelBassPca_func()], or a custom model with
+#'   `supports_wt = TRUE`).
 #'
 #' @return An object of class `CalibSetup`
 #'
@@ -86,7 +99,8 @@ addVecExperiments <- function(obj,
                               meas_error_cor = NULL,
                               theta_ind = NULL,
                               D = NULL,
-                              discrep_tau = 1) {
+                              discrep_tau = 1,
+                              wt = NULL) {
   N = length(obj$ys)
 
   # Validate before touching `obj`: a partially updated setup is worse than an
@@ -168,7 +182,43 @@ addVecExperiments <- function(obj,
   }
 
   if (is.null(theta_ind)) {
-    theta_ind = rep(0, length(yobs))
+    theta_ind = rep(1, length(yobs))
+  }
+  if (!is.numeric(theta_ind) || anyNA(theta_ind) ||
+      any(theta_ind != as.integer(theta_ind))) {
+    cli::cli_abort("{.arg theta_ind} must be a vector of whole numbers with no missing values.")
+  }
+  if (length(theta_ind) != length(yobs)) {
+    cli::cli_abort(c(
+      "{.arg theta_ind} must give a parameter index for every element of {.arg yobs}.",
+      i = "{.arg theta_ind} has length {length(theta_ind)} but {.arg yobs} has length {length(yobs)}."
+    ))
+  }
+  if (any(theta_ind < 1)) {
+    cli::cli_abort(c(
+      "{.arg theta_ind} must be 1-based.",
+      i = "Python impala uses 0-based indices; add 1 when porting a script."
+    ))
+  }
+  if (!all(seq_len(max(theta_ind)) %in% theta_ind)) {
+    cli::cli_abort(c(
+      "{.arg theta_ind} must use every index from 1 to {max(theta_ind)}.",
+      i = "Missing: {setdiff(seq_len(max(theta_ind)), theta_ind)}."
+    ))
+  }
+  theta_ind = as.integer(theta_ind)
+
+  if (is.null(wt)) {
+    wt = rep(1, length(yobs))
+  }
+  if (!is.numeric(wt) || length(wt) != length(yobs)) {
+    cli::cli_abort(c(
+      "{.arg wt} must be a numeric vector with one weight per element of {.arg yobs}.",
+      i = "{.arg wt} has length {length(wt)} but {.arg yobs} has length {length(yobs)}."
+    ))
+  }
+  if (anyNA(wt) || any(!is.finite(wt)) || any(wt < 0)) {
+    cli::cli_abort("{.arg wt} must be finite and non-negative.")
   }
 
   vec = rep(0, ns2)
@@ -190,6 +240,7 @@ addVecExperiments <- function(obj,
   }
 
   model$exp_ind = theta_ind
+  model$nexp = max(theta_ind)
   model$yobs = yobs
   if (!is.null(meas_error_cor)) {
     model$meas_error_cor = meas_error_cor
@@ -202,10 +253,11 @@ addVecExperiments <- function(obj,
   }
 
 
-  obj$ntheta = c(obj$ntheta, length(unique(theta_ind)))
+  obj$ntheta = c(obj$ntheta, max(theta_ind))
   obj$nclustmax = max(sum(obj$ntheta), 10)
 
   if (N == 0) {
+    obj$wt = list(wt)
     obj$ys = list(yobs)
     obj$y_lens = length(yobs)
     obj$theta_ind = list(theta_ind)
@@ -226,6 +278,7 @@ addVecExperiments <- function(obj,
       obj$s2_prior_kern = list(ldig_kern)
     }
   } else {
+    obj$wt[[N + 1]] = wt
     obj$ys[[N + 1]] = yobs
     obj$y_lens[[N + 1]] = length(yobs)
     obj$theta_ind[[N + 1]] = theta_ind
