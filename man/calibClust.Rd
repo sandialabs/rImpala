@@ -30,6 +30,8 @@ a list with the following elements
 - theta_native: list over experiments of lists over \eqn{j} of data frames
   of cold chain \eqn{\theta_j} samples on the native scale
 - theta0_native, theta_parent_native: as in [calibHier()]
+- temperature_ladder, swap_rejection, round_trips: tempering diagnostics,
+  see [setTemperatureLadder()]
 }
 \description{
 Runs clustered Bayesian model calibration: the calibration
@@ -46,10 +48,11 @@ Memberships are updated one \eqn{\theta_j} at a time with the
   Chinese restaurant process weights, using the empty clusters (whose values
   are redrawn from \eqn{N(\theta_0,\Sigma_0)} every iteration) as the
   candidate new clusters; \eqn{\eta} is updated with the auxiliary variable
-  scheme of Escobar and West (1995). Within a temperature the likelihood,
-  the error variance prior and the \eqn{N(\theta_0,\Sigma_0)} density of the
-  occupied clusters are tempered; the cluster process and the hyperpriors
-  are not.
+  scheme of Escobar and West (1995). Only the likelihood and the error
+  variance prior are tempered (a power posterior); the cluster process, the
+  \eqn{N(\theta_0,\Sigma_0)} density of the cluster values and the
+  hyperpriors enter every temperature at full strength, so all updates and
+  the swaps share one target per temperature.
 
   Discrepancy bases and [fixTheta()] are not supported; priors from
   [addThetaPrior()] are ignored.

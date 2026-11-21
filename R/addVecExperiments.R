@@ -11,8 +11,11 @@
 #'   number of variance groups.
 #' @param s2_df vector of inverse gamma prior degrees of freedom, one per
 #'   variance group, so `length(s2_df)` must equal `length(sd_est)`. A value of
-#'   zero selects a half-Cauchy prior instead; if any entry is zero the
-#'   half-Cauchy is used for every group.
+#'   zero gives an improper prior, which depends on how the model updates the
+#'   variance: \eqn{p(s^2) \propto 1/s^2} when it is updated by Gibbs sampling
+#'   (model `s2 = "gibbs"`), and a half-Cauchy-type kernel \eqn{1/(1 + s^2)}
+#'   when it is updated by Metropolis-Hastings; in the latter case, if any entry
+#'   is zero that kernel is used for every group.
 #' @param s2_ind vector of 1-based variance group indices, one per element of
 #'   `yobs`, mapping each observation to the variance it is drawn with. Must
 #'   satisfy `length(s2_ind) == length(yobs)` and
