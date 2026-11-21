@@ -13,7 +13,7 @@
   validated, matching `s2_ind`
 * emulator `lik_cov_inv()` methods accept `inds` to build the covariance of a
   subset of the observations
-* `calibPool()` now honours `s2 = 'fix'`, holding the error variance at
+* `calibPool()` now honors `s2 = 'fix'`, holding the error variance at
   `sd_est^2` instead of sampling it by Metropolis-Hastings
 * add `fixTheta()`/`unfixTheta()` to hold calibration parameters at fixed values,
   supporting conditional and cut-Bayes inference

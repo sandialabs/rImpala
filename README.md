@@ -14,11 +14,11 @@ Python tools for modular Bayesian model calibration. Posterior exploration inclu
 
 ### Installation
 ------------------------------------------------------------------------------
-v0.1.4 is on [CRAN](https://cran.r-project.org/package=impala) and can
+v0.2.0 is on [CRAN](https://cran.r-project.org/package=impala) and can
 be installed as
 
 ``` r
-install.packages("impala")`
+install.packages("impala")
 ```
 
 For a more up to date, but may not be stable version from git
