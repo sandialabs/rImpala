@@ -375,9 +375,12 @@ calibPool <- function(setup) {
         llik_diffi = (llik_candi - llik_curr[i, ])
         alpha_s2 = itl * llik_diffi
         alpha_s2 = alpha_s2 + itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_candi, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 + itl * ls2_rowsum(ls2_candi)
+        # Jacobian of the random walk on log(s2). It comes from the change of
+        # variables, not from the target, so it is not tempered: each chain
+        # targets [p(s2) L]^itl in s2, as the Gibbs updates and the swaps assume.
+        alpha_s2 = alpha_s2 + ls2_rowsum(ls2_candi)
         alpha_s2 = alpha_s2 - itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 - itl * ls2_rowsum(ls2_curr)
+        alpha_s2 = alpha_s2 - ls2_rowsum(ls2_curr)
 
         # Reject candidates outside sd_lower/sd_upper rather than clamping them:
         # clamping a Metropolis proposal would bias the stationary distribution.

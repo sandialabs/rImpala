@@ -196,6 +196,32 @@ test_that("pooled Gibbs s2 posterior is exact with tempering (s2_df = 0)", {
 })
 
 
+test_that("pooled Metropolis s2 posterior is exact with tempering (s2_df = 0)", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
+  # s2 by Metropolis on log(s2) with the 1/(1 + s2) kernel and a model that does
+  # not depend on theta. The log-transform Jacobian must not be tempered, or the
+  # hot chains target a different family than the swap ratio assumes and the
+  # cold chain is biased (about -5% here).
+  set.seed(123)
+  n <- 20
+  y <- stats::rnorm(n, 0, 0.5)
+  SS <- sum(y^2)
+  unnorm <- function(s2) exp(-n / 2 * log(s2) - SS / 2 / s2 - log1p(s2) + 20)
+  Z <- stats::integrate(unnorm, 1e-4, 50)$value
+  exact <- stats::integrate(function(s) s * unnorm(s), 1e-4, 50)$value / Z
+
+  set.seed(2)
+  setup <- CalibSetup(list(a = c(0, 1)), cf_bounds)
+  setup <- addVecExperiments(setup, y, StubModel(matrix(0, n, 1), s2 = "MH"),
+                             sd_est = 0.5, s2_df = 0, s2_ind = rep(1, n))
+  setup <- setTemperatureLadder(setup, 2^(0:3), start_temper = 200)
+  setup <- setMCMC(setup, nmcmc = 20000, decor = 100, start_var_ls2 = 0.1)
+  out <- suppressWarnings(calibPool(setup))
+  s2 <- out$s2[[1]][3001:20000, 1, 1]
+  expect_lt(abs(mean(s2) / exact - 1), 0.025)
+})
+
+
 flat_hier_setup <- function(scale, nmcmc, ntemps = 1, ntheta = 6, nobs = 5) {
   p <- 2
   ind <- rep(seq_len(ntheta), each = nobs)

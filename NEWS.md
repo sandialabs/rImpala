@@ -12,6 +12,10 @@ Ports lanl/impala#69, #70 and #71 from python impala.
 * fix: the tempering swap ratio used the half-Cauchy s2 kernel when
   `s2_df = 0` even though the Gibbs s2 update targets p(s2) ∝ 1/s2, which
   biased the cold chain once swaps started (all samplers)
+* fix: the Metropolis s2 update tempered the Jacobian of its random walk on
+  log(s2), so hot chains targeted a different family than the swap ratio
+  assumed and the cold chain was biased (about -6% in a test case; all
+  samplers)
 * fix: `calibClust()` now tempers only the likelihood (and s2 prior). It
   previously tempered the normal density of occupied clusters and the theta0 /
   Sigma0 updates but not empty clusters, memberships or the hyperpriors, so the

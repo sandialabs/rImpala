@@ -296,9 +296,12 @@ calibClust <- function(setup) {
         }
         alpha_s2 = itl * (rowSums(llik_candi) - rowSums(llik_now))
         alpha_s2 = alpha_s2 + itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_cand, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 + itl * ls2_rowsum(ls2_cand)
+        # Jacobian of the random walk on log(s2). It comes from the change of
+        # variables, not from the target, so it is not tempered: each chain
+        # targets [p(s2) L]^itl in s2, as the Gibbs updates and the swaps assume.
+        alpha_s2 = alpha_s2 + ls2_rowsum(ls2_cand)
         alpha_s2 = alpha_s2 - itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 - itl * ls2_rowsum(ls2_curr)
+        alpha_s2 = alpha_s2 - ls2_rowsum(ls2_curr)
         alpha_s2[!ls2_in_bounds(ls2_cand, setup$sd_lower[[i]], setup$sd_upper[[i]])] = -Inf
         for (t in which(log(stats::runif(ntemps)) < alpha_s2)) {
           count_s2[i, t] = count_s2[i, t] + 1
