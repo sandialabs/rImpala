@@ -1,4 +1,4 @@
-# impala (development version)
+# impala 0.2.0
 * add `calibHier()` for hierarchical calibration, where each `theta_ind` group
   gets its own parameter drawn from N(theta0, Sigma0), with hyperpriors set by
   the new `setHierPriors()` (ported from python impala)
