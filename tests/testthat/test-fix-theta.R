@@ -137,6 +137,7 @@ test_that("update_m/gen_cand adapt only the requested columns", {
 
 
 test_that("calibPool holds fixed parameters constant and samples the rest", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(61)
   p <- 3; ny <- 40; sig <- 0.05
   A <- matrix(stats::rnorm(ny * p), ny, p)
@@ -174,6 +175,7 @@ test_that("calibPool holds fixed parameters constant and samples the rest", {
 
 
 test_that("fixing a parameter matches calibrating a reduced model", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   # Fixing t_2 at v should give exactly the posterior of the p=2 problem with
   # A[, 2] * v folded into the data. This is the real correctness check: the
   # conditional posterior, not just a frozen column.
@@ -238,6 +240,7 @@ test_that("fixing every parameter still samples s2", {
 
 
 test_that("fixed parameters survive tempering swaps", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(73)
   p <- 3; ny <- 30; sig <- 0.05
   A <- matrix(stats::rnorm(ny * p), ny, p)

@@ -4,11 +4,14 @@
 # rather than against a previously recorded value.
 #
 # Iteration counts are set so the Monte Carlo error sits well inside the
-# tolerances below (measured max|z| ~ 0.07 against a 0.5 limit) while keeping the
-# whole suite to roughly half a minute, so these run everywhere including CRAN.
+# tolerances below (measured max|z| ~ 0.07 against a 0.5 limit). The long chains
+# make these too slow for the CRAN check-time budget (CRAN's Windows builder is
+# ~6x slower than a laptop), so they use skip_on_cran() and run under
+# devtools::test() and on CI, where NOT_CRAN=true.
 # Every draw is seeded, so the results are deterministic per platform.
 
 test_that("theta posterior matches the analytic conjugate posterior", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(7)
   p <- 2; ny <- 60; sig <- 0.05
   A <- matrix(stats::rnorm(ny * p), ny, p)
@@ -52,6 +55,7 @@ test_that("theta posterior matches the analytic conjugate posterior", {
 
 
 test_that("s2 is recovered under a weak prior", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(19)
   # ny is generous so the variance posterior concentrates: with only a few dozen
   # observations an s2_df = 2 prior leaves enough spread that any assertion tight
@@ -80,6 +84,7 @@ test_that("s2 is recovered under a weak prior", {
 
 
 test_that("each error group recovers its own variance", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(23)
   p <- 2; ny <- 200
   A <- matrix(stats::rnorm(ny * p), ny, p)
@@ -108,6 +113,7 @@ test_that("each error group recovers its own variance", {
 
 
 test_that("a separate variance per component of yobs is recovered", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   # s2_ind = seq_along(yobs) learns one sd per component. Each variance then has
   # a single observation, so the prior does the work -- this uses an informative
   # s2_df centred on the truth, which is the regime the feature is for. A
@@ -141,6 +147,7 @@ test_that("a separate variance per component of yobs is recovered", {
 
 
 test_that("tempered and untempered runs agree on the cold-chain posterior", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   run <- function(ntemps) {
     set.seed(31)
     p <- 2; ny <- 40; sig <- 0.05

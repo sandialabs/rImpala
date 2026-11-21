@@ -49,6 +49,7 @@ test_that("unit weights reproduce the unweighted sampler exactly", {
 
 
 test_that("weighted posterior matches the closed form (fixed s2)", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   wt <- rep(c(3, 0.5), each = 15)
   ws <- weighted_setup(wt, s2mode = "fix", nmcmc = 6000)
   out <- calibPool(ws$setup)
@@ -67,6 +68,7 @@ test_that("weighted posterior matches the closed form (fixed s2)", {
 
 
 test_that("weight 2 matches duplicating the data, including the Gibbs s2 draw", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   set.seed(3)
   A <- matrix(stats::rnorm(20 * 2), 20, 2)
   y <- as.numeric(A %*% c(0.4, 0.6)) + stats::rnorm(20, 0, 0.1)

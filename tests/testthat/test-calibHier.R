@@ -80,6 +80,7 @@ test_that("calibHier recovers group-specific parameters (Gibbs s2)", {
 
 
 test_that("calibHier runs with M-H s2 shared across thetas, and tempering", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   tt <- rbind(c(0.3, 0.6), c(0.6, 0.4))
   setup <- grouped_setup(tt, s2mode = "MH", shared_s2 = TRUE, nmcmc = 1500, ntemps = 3)
   out <- calibHier(setup)
@@ -95,6 +96,7 @@ test_that("calibHier runs with M-H s2 shared across thetas, and tempering", {
 
 
 test_that("calibClust groups experiments that share a parameter", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   tt <- rbind(c(0.3, 0.7), c(0.3, 0.7), c(0.7, 0.3), c(0.7, 0.3))
   setup <- grouped_setup(tt, nmcmc = 2000, seed = 8)
   setup <- setClusterPriors(setup, nclustmax = 4, eta_prior_shape = 1, eta_prior_rate = 1)
@@ -115,6 +117,7 @@ test_that("calibClust groups experiments that share a parameter", {
 
 
 test_that("calibClust runs with tempering, M-H s2 and scaled proposals", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   tt <- rbind(c(0.3, 0.7), c(0.7, 0.3), c(0.7, 0.3))
   setup <- grouped_setup(tt, s2mode = "MH", nmcmc = 800, ntemps = 2, seed = 9)
   setup <- setClusterPriors(setup, nclustmax = 3, scale_proposal = TRUE)

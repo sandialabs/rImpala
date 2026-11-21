@@ -78,6 +78,7 @@ test_that("s2 chains start from sd_est rather than a constant", {
 
 
 test_that("sd_lower and sd_upper confine every s2 draw", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   # Unbounded, this configuration wanders well above 0.09 (measured maxima of
   # 0.32 under M-H and 0.84 under Gibbs), so the bounds genuinely bite here
   # rather than being satisfied by accident.
@@ -100,6 +101,7 @@ test_that("sd_lower and sd_upper confine every s2 draw", {
 
 
 test_that("omitting the sd bounds leaves the sampler untouched", {
+  skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
   # The defaults must be inert: unset bounds become (0, Inf) and take neither
   # the Gibbs rejection path nor the M-H rejection path.
   for (mode in c("gibbs", "mh")) {
