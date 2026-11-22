@@ -23,6 +23,11 @@ a list with the following elements
 - llik: log likelihood
 - theta_native: mcmc samples of variables in native scale
 - theta_fixed: named vector of parameters held fixed, or `NULL` if none
+- temperature_ladder: the temperatures actually used (after any adaptation,
+  see [setTemperatureLadder()])
+- swap_rejection: estimated swap rejection rate on each adjacent pair of
+  temperatures (since the last ladder adaptation; `NaN` if never attempted)
+- round_trips: number of cold-hot-cold round trips made by the replicas
 }
 \description{
 This function runs pooled Bayesian Model Calibration with adaptive MCMC,

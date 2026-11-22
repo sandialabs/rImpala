@@ -31,15 +31,18 @@
 #' - theta_native: list over experiments of lists over \eqn{j} of data frames
 #'   of cold chain \eqn{\theta_j} samples on the native scale
 #' - theta0_native, theta_parent_native: as in [calibHier()]
+#' - temperature_ladder, swap_rejection, round_trips: tempering diagnostics,
+#'   see [setTemperatureLadder()]
 #'
 #' @details Memberships are updated one \eqn{\theta_j} at a time with the
 #'   Chinese restaurant process weights, using the empty clusters (whose values
 #'   are redrawn from \eqn{N(\theta_0,\Sigma_0)} every iteration) as the
 #'   candidate new clusters; \eqn{\eta} is updated with the auxiliary variable
-#'   scheme of Escobar and West (1995). Within a temperature the likelihood,
-#'   the error variance prior and the \eqn{N(\theta_0,\Sigma_0)} density of the
-#'   occupied clusters are tempered; the cluster process and the hyperpriors
-#'   are not.
+#'   scheme of Escobar and West (1995). Only the likelihood and the error
+#'   variance prior are tempered (a power posterior); the cluster process, the
+#'   \eqn{N(\theta_0,\Sigma_0)} density of the cluster values and the
+#'   hyperpriors enter every temperature at full strength, so all updates and
+#'   the swaps share one target per temperature.
 #'
 #'   Discrepancy bases and [fixTheta()] are not supported; priors from
 #'   [addThetaPrior()] are ignored.
@@ -48,12 +51,21 @@
 #'
 calibClust <- function(setup) {
   check_hier_setup(setup, "calibClust")
+  if (identical(setup$hier_scale, "probit")) {
+    cli::cli_abort(c(
+      "{.code setHierPriors(scale = \"probit\")} is not supported by {.fn calibClust} yet.",
+      i = "Use {.code scale = \"unit\"} or {.fn calibHier}."
+    ))
+  }
 
   nexp = setup$nexp
   ntemps = setup$ntemps
   nmcmc = setup$nmcmc
   p = setup$p
-  itl = setup$itl
+  # working copy of the inverse-temperature ladder; adapted during burn-in when
+  # setup$adapt_ladder is TRUE (see tempering.R)
+  sched = make_swap_scheduler(setup, "interleaved")
+  itl = sched$itl
   ntheta_vec = setup$ntheta
   ndat = sum(ntheta_vec)
   K = setup$nclustmax
@@ -284,9 +296,12 @@ calibClust <- function(setup) {
         }
         alpha_s2 = itl * (rowSums(llik_candi) - rowSums(llik_now))
         alpha_s2 = alpha_s2 + itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_cand, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 + itl * ls2_rowsum(ls2_cand)
+        # Jacobian of the random walk on log(s2). It comes from the change of
+        # variables, not from the target, so it is not tempered: each chain
+        # targets [p(s2) L]^itl in s2, as the Gibbs updates and the swaps assume.
+        alpha_s2 = alpha_s2 + ls2_rowsum(ls2_cand)
         alpha_s2 = alpha_s2 - itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 - itl * ls2_rowsum(ls2_curr)
+        alpha_s2 = alpha_s2 - ls2_rowsum(ls2_curr)
         alpha_s2[!ls2_in_bounds(ls2_cand, setup$sd_lower[[i]], setup$sd_upper[[i]])] = -Inf
         for (t in which(log(stats::runif(ntemps)) < alpha_s2)) {
           count_s2[i, t] = count_s2[i, t] + 1
@@ -299,12 +314,17 @@ calibClust <- function(setup) {
     }
 
     # ---- Gibbs update theta0 from the occupied clusters ----
+    # Only the likelihood is tempered (a power posterior): the normal density of
+    # the cluster values around theta0 enters at full strength in every chain,
+    # as do the priors of theta0, Sigma0, eta and the memberships. Tempering
+    # the normal density of the occupied clusters only would not be consistent
+    # with empty clusters being redrawn untempered and with membership moves.
     th = th_now(m)
     for (t in 1:ntemps) {
       occ = matrix(th[t, ext[t, ], ], ncol = p)
-      prec = n_ext[t] * itl[t] * Sigma0_inv[t, , ] + theta0_prior_prec
+      prec = n_ext[t] * Sigma0_inv[t, , ] + theta0_prior_prec
       cc = chol2inv(chol(prec))
-      dd = itl[t] * Sigma0_inv[t, , ] %*% colSums(occ) + theta0_prior_prec %*% theta0_prior_mean
+      dd = Sigma0_inv[t, , ] %*% colSums(occ) + theta0_prior_prec %*% theta0_prior_mean
       theta0[m, t, ] = rmvn_constrained(t(cc %*% dd), t(chol(cc)), setup)
     }
 
@@ -312,7 +332,7 @@ calibClust <- function(setup) {
     for (t in 1:ntemps) {
       occ = matrix(th[t, ext[t, ], ], ncol = p)
       d = sweep(occ, 2, theta0[m, t, ])
-      S_t = rinvwishart(Sigma0_prior_df + n_ext[t] * itl[t], Sigma0_prior_scale + itl[t] * crossprod(d))
+      S_t = rinvwishart(Sigma0_prior_df + n_ext[t], Sigma0_prior_scale + crossprod(d))
       Sigma0[m, t, , ] = S_t
       R = chol(S_t)
       Sigma0_inv[t, , ] = chol2inv(R)
@@ -376,7 +396,7 @@ calibClust <- function(setup) {
     }
     alpha = matrix(-Inf, ntemps, K)
     lp_diff = lprior_clusters(eval_arr) - lprior_clusters(th)
-    alpha[good] = (itl * (llik_clust_cand - llik_clust_curr + lp_diff))[good]
+    alpha[good] = (itl * (llik_clust_cand - llik_clust_curr) + lp_diff)[good]
     accept = (log(matrix(stats::runif(ntemps * K), ntemps)) < alpha) & good
     update = accept | !ext
     for (t in 1:ntemps) for (k in which(update[t, ])) theta[m, t, k, ] = eval_arr[t, k, ]
@@ -393,28 +413,29 @@ calibClust <- function(setup) {
 
     # ---- concentration eta (Escobar & West 1995) ----
     for (t in 1:ntemps) {
-      g = stats::rbeta(1, eta[m, t] + 1, ndat)
-      aa = eta_shape + n_ext[t]
-      bb = eta_rate - log(g)
-      pi_hi = (aa - 1) / (ndat * bb + aa - 1)
-      shape = if (stats::runif(1) < pi_hi) aa else aa - 1
-      eta[m, t] = stats::rgamma(1, shape = shape, rate = bb)
+      eta[m, t] = sample_eta(eta[m, t], n_ext[t], ndat, eta_shape, eta_rate)
     }
 
     # ---- tempering swaps ----
     if ((m > setup$start_temper) && (ntemps > 1)) {
       for (sweep_k in 1:setup$nswap) {
-        ext = extant(m)
-        lpc = lprior_clusters(th_now(m))
-        tempered = rowSums(lpc * ext)
+        # Only the likelihood and the s2 prior (which the s2 updates temper)
+        # are tempered. The clustering prior -- p(theta0), p(Sigma0), p(eta),
+        # the memberships and the normal density of the cluster values -- is
+        # the same in every chain, so it cancels here.
+        tempered = rep(0, ntemps)
         for (i in 1:nexp) {
           ls2 = matrix(log_s2[[i]][m, , ], ntemps, setup$ns2[[i]])
           tempered = tempered + rowSums(llik_curr[[i]]) +
-            s2_kern_sum(setup$s2_prior_kern[[i]], ls2, setup$ig_a[[i]], setup$ig_b[[i]])
+            s2_kern_sum(s2_swap_kern(setup, i), ls2, setup$ig_a[[i]], setup$ig_b[[i]])
         }
-        sw = matrix(sample(1:ntemps, 2 * setup$nswap_per, FALSE), 2)
+        sw = sched_pairs(sched)
+        if (ncol(sw) == 0) next
         sw_alpha = (itl[sw[2, ]] - itl[sw[1, ]]) * (tempered[sw[1, ]] - tempered[sw[2, ]])
-        for (s in which(log(stats::runif(setup$nswap_per)) < sw_alpha)) {
+        accepted = log(stats::runif(ncol(sw))) < sw_alpha
+        accepted[is.na(accepted)] = FALSE
+        sched_record(sched, sw, sw_alpha, accepted)
+        for (s in which(accepted)) {
           a = sw[1, s]
           b = sw[2, s]
           count_temper[a, b] = count_temper[a, b] + 1
@@ -436,6 +457,11 @@ calibClust <- function(setup) {
           }
         }
       }
+    }
+
+    if ((m > setup$start_temper) && (ntemps > 1)) {
+      # ladder changed: every use of itl reads the new value from here on
+      if (sched_maybe_adapt(sched, m)) itl = sched$itl
     }
 
     llik_trace[m] = sum(vapply(llik_curr, function(x) sum(x[1, ]), numeric(1)))
@@ -475,6 +501,27 @@ calibClust <- function(setup) {
     nclustmax = K,
     theta_native = theta_native,
     theta0_native = to_native(theta0[, 1, ]),
-    theta_parent_native = to_native(parent)
+    theta_parent_native = to_native(parent),
+    temperature_ladder = 1 / itl,
+    swap_rejection = sched_rejection_rates(sched),
+    round_trips = sched$round_trips
   )
+}
+
+
+# Escobar & West (1995, eq. 13) auxiliary-variable update of the Dirichlet
+# process concentration eta, given k clusters among n items and a
+# Gamma(shape, rate) prior: draw g ~ Beta(eta + 1, n), then eta from
+# Gamma(shape + k, rate - log g) with probability pi_hi and from
+# Gamma(shape + k - 1, rate - log g) otherwise, where
+# pi_hi / (1 - pi_hi) = (shape + k - 1) / (n (rate - log g)).
+# Vectorised over eta and k.
+sample_eta <- function(eta, k, n, shape, rate) {
+  len = max(length(eta), length(k))
+  g = stats::rbeta(len, eta + 1, n)
+  aa = shape + k
+  bb = rate - log(g)
+  pi_hi = (aa - 1) / (n * bb + aa - 1)
+  a_new = ifelse(stats::runif(len) < pi_hi, aa, aa - 1)
+  stats::rgamma(len, shape = a_new, rate = bb)
 }

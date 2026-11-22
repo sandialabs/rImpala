@@ -1,5 +1,45 @@
 # impala (development version)
 
+Ports lanl/impala#69, #70 and #71 from python impala.
+
+* parallel tempering now uses non-reversible deterministic even/odd swaps
+  between adjacent temperatures by default (`setTemperatureLadder(swap_scheme =
+  "deo")`); `"seo"` and `"random"` (the previous behaviour, same chains for a
+  fixed seed) are also available. Optional ladder adaptation during burn-in
+  (`adapt_ladder = TRUE`, experimental). `calibPool()`, `calibHier()` and
+  `calibClust()` return `temperature_ladder`, `swap_rejection` and
+  `round_trips`
+* fix: the tempering swap ratio used the half-Cauchy s2 kernel when
+  `s2_df = 0` even though the Gibbs s2 update targets p(s2) ∝ 1/s2, which
+  biased the cold chain once swaps started (all samplers)
+* fix: the Metropolis s2 update tempered the Jacobian of its random walk on
+  log(s2), so hot chains targeted a different family than the swap ratio
+  assumed and the cold chain was biased (about -6% in a test case; all
+  samplers)
+* fix: `calibClust()` now tempers only the likelihood (and s2 prior). It
+  previously tempered the normal density of occupied clusters and the theta0 /
+  Sigma0 updates but not empty clusters, memberships or the hyperpriors, so the
+  chains had no common target and swaps biased the cold chain
+* `setHierPriors(scale = "probit")` places the hierarchy of `calibHier()` on
+  the probit of the 0-1 scale, so the bounds no longer truncate
+  N(theta0, Sigma0) and tilt the hyperprior. The default stays `"unit"`
+* add `sampleHierParent()` to draw parameters of a new experiment from the
+  fitted hierarchical distribution on the right scale
+* port the material strength physics models from python impala:
+  `MaterialModel()` with PTW, Johnson-Cook, Steinberg-Guinan and constant flow
+  stress plus specific heat, density, melt temperature and shear modulus
+  sub-models (`getoptions_ModelMaterialStrength()` lists them), and
+  `ModelMaterialStrength()` to calibrate them against stress-strain curves.
+  `constraints_ptw()` checks the PTW parameter ordering
+* add `ModelF()` to calibrate an R function directly, with a diagonal Gaussian
+  likelihood
+* `CalibSetup()` now defaults `constraint_func` to `cf_bounds()`. A constraint
+  function that takes a third argument receives the first model's constants,
+  so it can check parameters held constant
+* port the remaining python impala tests: physics model regressions and FLAG
+  comparisons, pooled/hierarchical/clustered PTW calibration, the Friedman
+  uniform-posterior check and the theta prior checks
+
 # impala 0.2.0
 * add `calibHier()` for hierarchical calibration, where each `theta_ind` group
   gets its own parameter drawn from N(theta0, Sigma0), with hyperpriors set by

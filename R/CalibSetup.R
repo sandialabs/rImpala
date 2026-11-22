@@ -5,8 +5,11 @@
 #'                two dimensional arrays where first element is lower bound
 #'                and second element is upper bound.
 #' @param constraint_func function handle to constraint function on
-#'                         variables. Defaults to function on checking
-#'                         bounds
+#'                         variables, called as `f(x, bounds)` or, when it
+#'                         takes a third argument, `f(x, bounds, constants)`
+#'                         with the constants of the first model added (see
+#'                         [constraints_ptw()]). Defaults to [cf_bounds()],
+#'                         which only checks the bounds.
 #'
 #' @return An object of class `CalibSetup` which is a list with the following
 #'   components:
@@ -19,7 +22,7 @@
 #' @export
 #'
 
-CalibSetup <- function(bounds, constraint_func) {
+CalibSetup <- function(bounds, constraint_func = cf_bounds) {
   fn = names(bounds)
   bmattmp = matrix(0, length(bounds), 2)
   for (i in 1:length(bounds)) {
@@ -36,6 +39,7 @@ CalibSetup <- function(bounds, constraint_func) {
     bounds = bounds,
     bounds_mat = bmattmp,
     checkConstraints = constraint_func,
+    constants = NULL,
     p = length(bounds),
     nmcmc = 10000,
     nburn = 5000,
@@ -57,6 +61,9 @@ CalibSetup <- function(bounds, constraint_func) {
     nswap = 5,
     nswap_per = 0,
     start_temper = Inf,
+    swap_scheme = "deo",
+    adapt_ladder = FALSE,
+    adapt_ladder_until = NULL,
     theta_prior = NULL,
     theta_fixed = NULL,
     s2_prior_kern = NULL,
@@ -67,6 +74,7 @@ CalibSetup <- function(bounds, constraint_func) {
     Sigma0_prior_df = NULL,
     Sigma0_prior_scale = NULL,
     theta0_start = NULL,
+    hier_scale = "unit",
     nclustmax = NULL,
     eta_prior_shape = 2,
     eta_prior_rate = 0.1,

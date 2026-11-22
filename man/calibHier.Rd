@@ -14,7 +14,8 @@ a list with the following elements
 - theta: list over experiments of `nmcmc x ntemps x ntheta x p` arrays of
   \eqn{\theta_j} samples (0-1 scale)
 - theta0: `nmcmc x ntemps x p` array of \eqn{\theta_0} samples
-- Sigma0: `nmcmc x ntemps x p x p` array of \eqn{\Sigma_0} samples
+- Sigma0: `nmcmc x ntemps x p x p` array of \eqn{\Sigma_0} samples (on
+  the probit scale when `setHierPriors(scale = "probit")`)
 - s2: list over experiments of error variance samples
 - count: list over experiments of `ntemps x ntheta` acceptance counts
 - count_s2: acceptance counts for Metropolis error variance updates
@@ -30,7 +31,10 @@ a list with the following elements
   native scale
 - theta_parent_native: data frame of draws from
   \eqn{N(\theta_0, \Sigma_0)} (truncated to the constraints) at each cold
-  chain sample, i.e. the parameter of a new, unobserved experiment
+  chain sample, i.e. the parameter of a new, unobserved experiment (see
+  [sampleHierParent()])
+- temperature_ladder, swap_rejection, round_trips: tempering diagnostics,
+  see [setTemperatureLadder()]
 }
 \description{
 Runs hierarchical Bayesian model calibration with adaptive
@@ -40,7 +44,8 @@ Runs hierarchical Bayesian model calibration with adaptive
   \eqn{\theta_j} are tied together by
   \eqn{\theta_j \sim N(\theta_0, \Sigma_0)}, truncated to the constraints,
   with the hyperpriors set by [setHierPriors()]. Parameters live on the 0-1
-  scale of `bounds`.
+  scale of `bounds`, or on its probit with `setHierPriors(scale = "probit")`,
+  in which case the bounds no longer truncate the hierarchical distribution.
 }
 \details{
 Within a temperature the likelihood, the \eqn{N(\theta_0,\Sigma_0)}

@@ -18,6 +18,11 @@
 #' - llik: log likelihood
 #' - theta_native: mcmc samples of variables in native scale
 #' - theta_fixed: named vector of parameters held fixed, or `NULL` if none
+#' - temperature_ladder: the temperatures actually used (after any adaptation,
+#'   see [setTemperatureLadder()])
+#' - swap_rejection: estimated swap rejection rate on each adjacent pair of
+#'   temperatures (since the last ladder adaptation; `NaN` if never attempted)
+#' - round_trips: number of cold-hot-cold round trips made by the replicas
 #'
 #' @details Parameters fixed with [fixTheta()] are held at their given values
 #'   throughout: they keep their column in `theta` and `theta_native`, constant
@@ -27,6 +32,10 @@
 #' @export
 #'
 calibPool <- function(setup) {
+  # working copy of the inverse-temperature ladder; adapted during burn-in when
+  # setup$adapt_ladder is TRUE (see tempering.R)
+  sched = make_swap_scheduler(setup, "split")
+  itl = sched$itl
   theta = array(0, dim = c(setup$nmcmc, setup$ntemps, setup$p))
   log_s2 <- vector(mode = "list", length = setup$nexp)
   s2_ind_mat <- vector(mode = "list", length = setup$nexp)
@@ -59,8 +68,7 @@ calibPool <- function(setup) {
   # fixed parameters start at, and stay at, their given value on the unit scale
   theta_start = set_fixed_cols(theta_start, split)
 
-  good = setup$checkConstraints(tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)),
-                                setup$bounds)
+  good = check_constraints(setup, tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)))
 
   # a constraint function can rule out every draw once some parameters are
   # pinned, so give up rather than spin forever
@@ -76,9 +84,8 @@ calibPool <- function(setup) {
     nbad = sum(!good)
     cand = matrix(stats::runif(nbad * setup$p), nbad)
     theta_start[!good, ] = set_fixed_cols(cand, split)
-    good[!good] = setup$checkConstraints(tran_unif(matrix(theta_start[!good, ], nbad, setup$p),
-                                                  setup$bounds_mat, names(setup$bounds)),
-                                         setup$bounds)
+    good[!good] = check_constraints(setup, tran_unif(matrix(theta_start[!good, ], nbad, setup$p),
+                                                  setup$bounds_mat, names(setup$bounds)))
   }
 
   theta[1, , ] = theta_start
@@ -87,7 +94,7 @@ calibPool <- function(setup) {
   # (ntemps x ns2): the inverse temperature ladder replicated across variance groups
   itl_mat = vector(mode = "list", length = setup$nexp)
   for (i in 1:setup$nexp) {
-    itl_mat[[i]] = matrix(setup$itl, setup$ntemps, setup$ns2[[i]])
+    itl_mat[[i]] = matrix(itl, setup$ntemps, setup$ns2[[i]])
   }
 
   pred_curr = vector(mode = "list", length = setup$nexp)
@@ -177,7 +184,7 @@ calibPool <- function(setup) {
                                                      setup$ys[[i]],
                                                      pred_curr[[i]][t, ],
                                                      marg_lik_cov_cur[[i]][[t]],
-                                                     setup$itl[t],
+                                                     itl[t],
                                                      wt = wt[[i]])
           discrep_curr[[i]][t, ] = setup$models[[i]]$D %*% discrep_vars[[i]][m, t, ]
         }
@@ -213,8 +220,7 @@ calibPool <- function(setup) {
       # generate proposal, leaving the fixed columns at their current values
       theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
       theta_cand[, free_idx] = gen_cand(cov_theta_cand, theta, m, cols = free_idx)
-      good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                           setup$bounds)
+      good_values = check_constraints(setup, tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)))
 
       # get predictions and SSE
       pred_cand = pred_curr
@@ -244,7 +250,7 @@ calibPool <- function(setup) {
       llik_diff = llik_diff[good_values]
 
       alpha = rep(1, setup$ntemps) * -Inf
-      alpha[good_values] = setup$itl[good_values] * llik_diff
+      alpha[good_values] = itl[good_values] * llik_diff
       idx = which(log(stats::runif(setup$ntemps)) < alpha)
       for (t in idx) {
         theta[m, t, ] = theta_cand[t, ]
@@ -266,8 +272,7 @@ calibPool <- function(setup) {
       for (k in free_idx) {
         theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
         theta_cand[, k] = stats::runif(setup$ntemps)
-        good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                             setup$bounds)
+        good_values = check_constraints(setup, tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)))
         pred_cand = pred_curr
         llik_cand = llik_curr
         lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
@@ -298,7 +303,7 @@ calibPool <- function(setup) {
         llik_diff = ((colSums(llik_cand) + lpr_cand) - (colSums(llik_curr) + lpr_curr))
         llik_diff = llik_diff[good_values]
 
-        alpha[good_values] = setup$itl[good_values] * llik_diff
+        alpha[good_values] = itl[good_values] * llik_diff
 
         idx = which(log(stats::runif(setup$ntemps)) < alpha)
         for (t in idx) {
@@ -364,11 +369,14 @@ calibPool <- function(setup) {
         ls2_curr = matrix(log_s2[[i]][m - 1, , ], setup$ntemps, setup$ns2[[i]])
 
         llik_diffi = (llik_candi - llik_curr[i, ])
-        alpha_s2 = setup$itl * llik_diffi
-        alpha_s2 = alpha_s2 + setup$itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_candi, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 + setup$itl * ls2_rowsum(ls2_candi)
-        alpha_s2 = alpha_s2 - setup$itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
-        alpha_s2 = alpha_s2 - setup$itl * ls2_rowsum(ls2_curr)
+        alpha_s2 = itl * llik_diffi
+        alpha_s2 = alpha_s2 + itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_candi, setup$ig_a[[i]], setup$ig_b[[i]])
+        # Jacobian of the random walk on log(s2). It comes from the change of
+        # variables, not from the target, so it is not tempered: each chain
+        # targets [p(s2) L]^itl in s2, as the Gibbs updates and the swaps assume.
+        alpha_s2 = alpha_s2 + ls2_rowsum(ls2_candi)
+        alpha_s2 = alpha_s2 - itl * s2_kern_sum(setup$s2_prior_kern[[i]], ls2_curr, setup$ig_a[[i]], setup$ig_b[[i]])
+        alpha_s2 = alpha_s2 - ls2_rowsum(ls2_curr)
 
         # Reject candidates outside sd_lower/sd_upper rather than clamping them:
         # clamping a Metropolis proposal would bias the stationary distribution.
@@ -392,23 +400,25 @@ calibPool <- function(setup) {
     # tempering swaps
     if ((m > setup$start_temper) & (setup$ntemps > 1)) {
       for (k in 1:setup$nswap) {
-        sw = sample(1:setup$ntemps, 2 * setup$nswap_per, FALSE)
-        sw = matrix(sw, setup$nswap_per, 2)
-        sw = t(sw)
+        sw = sched_pairs(sched)
+        npair = ncol(sw)
+        if (npair == 0) next
 
-        sw_alpha = rep(0, setup$nswap_per)
-        sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ], drop = FALSE]) - colSums(llik_curr[, sw[2, ], drop = FALSE]))
-        sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) * (lpr_curr[sw[1, ]] - lpr_curr[sw[2, ]])
+        sw_alpha = rep(0, npair)
+        sw_alpha = sw_alpha + (itl[sw[2, ]] - itl[sw[1, ]]) * (colSums(llik_curr[, sw[1, ], drop = FALSE]) - colSums(llik_curr[, sw[2, ], drop = FALSE]))
+        sw_alpha = sw_alpha + (itl[sw[2, ]] - itl[sw[1, ]]) * (lpr_curr[sw[1, ]] - lpr_curr[sw[2, ]])
         for (i in 1:setup$nexp) {
-          ls2_sw1 = matrix(log_s2[[i]][m, sw[1, ], ], setup$nswap_per, setup$ns2[[i]])
-          ls2_sw2 = matrix(log_s2[[i]][m, sw[2, ], ], setup$nswap_per, setup$ns2[[i]])
-          sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
-            (s2_kern_sum(setup$s2_prior_kern[[i]], ls2_sw1, setup$ig_a[[i]], setup$ig_b[[i]]) -
-               s2_kern_sum(setup$s2_prior_kern[[i]], ls2_sw2, setup$ig_a[[i]], setup$ig_b[[i]]))
+          ls2_sw1 = matrix(log_s2[[i]][m, sw[1, ], ], npair, setup$ns2[[i]])
+          ls2_sw2 = matrix(log_s2[[i]][m, sw[2, ], ], npair, setup$ns2[[i]])
+          # s2 prior kernel that the within-chain s2 update targets
+          kern = s2_swap_kern(setup, i)
+          sw_alpha = sw_alpha + (itl[sw[2, ]] - itl[sw[1, ]]) *
+            (s2_kern_sum(kern, ls2_sw1, setup$ig_a[[i]], setup$ig_b[[i]]) -
+               s2_kern_sum(kern, ls2_sw2, setup$ig_a[[i]], setup$ig_b[[i]]))
           if (setup$models[[i]]$nd > 0) {
-            dv_sw1 = matrix(discrep_vars[[i]][m, sw[1, ], ], setup$nswap_per, setup$models[[i]]$nd)
-            dv_sw2 = matrix(discrep_vars[[i]][m, sw[2, ], ], setup$nswap_per, setup$models[[i]]$nd)
-            sw_alpha = sw_alpha + (setup$itl[sw[2, ]] - setup$itl[sw[1, ]]) *
+            dv_sw1 = matrix(discrep_vars[[i]][m, sw[1, ], ], npair, setup$models[[i]]$nd)
+            dv_sw2 = matrix(discrep_vars[[i]][m, sw[2, ], ], npair, setup$models[[i]]$nd)
+            sw_alpha = sw_alpha + (itl[sw[2, ]] - itl[sw[1, ]]) *
               (
                 -0.5 * rowSums(dv_sw1^2) / setup$models[[i]]$discrep_tau +
                   0.5 * rowSums(dv_sw2^2) / setup$models[[i]]$discrep_tau
@@ -416,7 +426,10 @@ calibPool <- function(setup) {
           }
         }
 
-        idx = which(log(stats::runif(setup$nswap_per)) < sw_alpha)
+        accepted = log(stats::runif(npair)) < sw_alpha
+        accepted[is.na(accepted)] = FALSE
+        sched_record(sched, sw, sw_alpha, accepted)
+        idx = which(accepted)
 
         for (tti in idx) {
           tt = sw[, tti]
@@ -461,6 +474,14 @@ calibPool <- function(setup) {
       }
     }
 
+    if ((m > setup$start_temper) && (setup$ntemps > 1) && sched_maybe_adapt(sched, m)) {
+      # ladder changed: rebuild everything derived from it
+      itl = sched$itl
+      for (i in 1:setup$nexp) {
+        itl_mat[[i]] = matrix(itl, setup$ntemps, setup$ns2[[i]])
+      }
+    }
+
     llik[m] = sum(llik_curr[, 1])
 
     pb$tick()
@@ -487,7 +508,10 @@ calibPool <- function(setup) {
     discrep_vars = discrep_vars,
     llik = llik,
     theta_native = data.frame(theta_native),
-    theta_fixed = setup$theta_fixed
+    theta_fixed = setup$theta_fixed,
+    temperature_ladder = 1 / itl,
+    swap_rejection = sched_rejection_rates(sched),
+    round_trips = sched$round_trips
   )
 
   out
