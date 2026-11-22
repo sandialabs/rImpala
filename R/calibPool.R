@@ -68,8 +68,7 @@ calibPool <- function(setup) {
   # fixed parameters start at, and stay at, their given value on the unit scale
   theta_start = set_fixed_cols(theta_start, split)
 
-  good = setup$checkConstraints(tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)),
-                                setup$bounds)
+  good = check_constraints(setup, tran_unif(theta_start, setup$bounds_mat, names(setup$bounds)))
 
   # a constraint function can rule out every draw once some parameters are
   # pinned, so give up rather than spin forever
@@ -85,9 +84,8 @@ calibPool <- function(setup) {
     nbad = sum(!good)
     cand = matrix(stats::runif(nbad * setup$p), nbad)
     theta_start[!good, ] = set_fixed_cols(cand, split)
-    good[!good] = setup$checkConstraints(tran_unif(matrix(theta_start[!good, ], nbad, setup$p),
-                                                  setup$bounds_mat, names(setup$bounds)),
-                                         setup$bounds)
+    good[!good] = check_constraints(setup, tran_unif(matrix(theta_start[!good, ], nbad, setup$p),
+                                                  setup$bounds_mat, names(setup$bounds)))
   }
 
   theta[1, , ] = theta_start
@@ -222,8 +220,7 @@ calibPool <- function(setup) {
       # generate proposal, leaving the fixed columns at their current values
       theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
       theta_cand[, free_idx] = gen_cand(cov_theta_cand, theta, m, cols = free_idx)
-      good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                           setup$bounds)
+      good_values = check_constraints(setup, tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)))
 
       # get predictions and SSE
       pred_cand = pred_curr
@@ -275,8 +272,7 @@ calibPool <- function(setup) {
       for (k in free_idx) {
         theta_cand = matrix(theta[m, , ], setup$ntemps, setup$p)
         theta_cand[, k] = stats::runif(setup$ntemps)
-        good_values = setup$checkConstraints(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),
-                                             setup$bounds)
+        good_values = check_constraints(setup, tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)))
         pred_cand = pred_curr
         llik_cand = llik_curr
         lpr_cand = eval_theta_priors(tran_unif(theta_cand, setup$bounds_mat, names(setup$bounds)),

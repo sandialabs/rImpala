@@ -83,13 +83,27 @@ weighted_dev_sq <- function(pred, yobs, wt, s2_ind_mat) {
 }
 
 
+# Call the setup's constraint function on a named list of native-scale
+# parameters. Functions that accept a third argument (or `...`) also get the
+# model constants, so a constraint can involve parameters held constant (see
+# constraints_ptw); two-argument functions are called as before.
+check_constraints <- function(setup, x) {
+  f = setup$checkConstraints
+  fa = names(formals(f))
+  if (length(fa) >= 3 || "..." %in% fa) {
+    f(x, setup$bounds, setup$constants)
+  } else {
+    f(x, setup$bounds)
+  }
+}
+
+
 # TRUE/FALSE per row of an (n x p) 0-1 scale matrix: satisfies the constraints.
 # With `latent = TRUE`, x is on the probit scale (see setHierPriors(scale =)).
 theta_ok <- function(x, setup, latent = FALSE) {
   x = matrix(x, ncol = setup$p)
   if (latent) x = stats::pnorm(x)
-  as.logical(setup$checkConstraints(tran_unif(x, setup$bounds_mat, names(setup$bounds)),
-                                    setup$bounds))
+  as.logical(check_constraints(setup, tran_unif(x, setup$bounds_mat, names(setup$bounds))))
 }
 
 

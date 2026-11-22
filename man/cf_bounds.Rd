@@ -4,12 +4,15 @@
 \alias{cf_bounds}
 \title{Compare to bounds}
 \usage{
-cf_bounds(x, bounds)
+cf_bounds(x, bounds, constants = NULL)
 }
 \arguments{
 \item{x}{list of of parameters}
 
 \item{bounds}{list of bounds for each parameter that is a two parameter vector with high and low}
+
+\item{constants}{unused; present so every constraint function shares the
+signature of [constraints_ptw()]}
 }
 \value{
 a vector of `TRUE` or `FALSE` if the values are within the bounds

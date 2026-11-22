@@ -103,12 +103,14 @@ chol_sample <- function(mean, cov) {
 #'
 #' @param x list of of parameters
 #' @param bounds list of bounds for each parameter that is a two parameter vector with high and low
+#' @param constants unused; present so every constraint function shares the
+#'   signature of [constraints_ptw()]
 #'
 #' @return a vector of `TRUE` or `FALSE` if the values are within the bounds
 #'
 #' @export
 #'
-cf_bounds <- function(x, bounds) {
+cf_bounds <- function(x, bounds, constants = NULL) {
   k = names(bounds)
   good = x[[k[1]]] < bounds[[k[1]]][2]
   for (i in 1:length(k)) {

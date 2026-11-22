@@ -304,6 +304,8 @@ addVecExperiments <- function(obj,
   }
 
   obj$nexp = obj$nexp + 1
+  # constants of the first model, passed to three-argument constraint functions
+  obj$constants = obj$models[[1]]$constants
 
   obj
 

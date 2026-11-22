@@ -4,7 +4,7 @@
 \alias{CalibSetup}
 \title{Pooled Bayesian Model Calibration}
 \usage{
-CalibSetup(bounds, constraint_func)
+CalibSetup(bounds, constraint_func = cf_bounds)
 }
 \arguments{
 \item{bounds}{a list with fields of variable names with values of
@@ -12,8 +12,11 @@ two dimensional arrays where first element is lower bound
 and second element is upper bound.}
 
 \item{constraint_func}{function handle to constraint function on
-variables. Defaults to function on checking
-bounds}
+variables, called as `f(x, bounds)` or, when it
+takes a third argument, `f(x, bounds, constants)`
+with the constants of the first model added (see
+[constraints_ptw()]). Defaults to [cf_bounds()],
+which only checks the bounds.}
 }
 \value{
 An object of class `CalibSetup` which is a list with the following

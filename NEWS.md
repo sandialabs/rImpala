@@ -25,6 +25,20 @@ Ports lanl/impala#69, #70 and #71 from python impala.
   N(theta0, Sigma0) and tilt the hyperprior. The default stays `"unit"`
 * add `sampleHierParent()` to draw parameters of a new experiment from the
   fitted hierarchical distribution on the right scale
+* port the material strength physics models from python impala:
+  `MaterialModel()` with PTW, Johnson-Cook, Steinberg-Guinan and constant flow
+  stress plus specific heat, density, melt temperature and shear modulus
+  sub-models (`getoptions_ModelMaterialStrength()` lists them), and
+  `ModelMaterialStrength()` to calibrate them against stress-strain curves.
+  `constraints_ptw()` checks the PTW parameter ordering
+* add `ModelF()` to calibrate an R function directly, with a diagonal Gaussian
+  likelihood
+* `CalibSetup()` now defaults `constraint_func` to `cf_bounds()`. A constraint
+  function that takes a third argument receives the first model's constants,
+  so it can check parameters held constant
+* port the remaining python impala tests: physics model regressions and FLAG
+  comparisons, pooled/hierarchical/clustered PTW calibration, the Friedman
+  uniform-posterior check and the theta prior checks
 
 # impala 0.2.0
 * add `calibHier()` for hierarchical calibration, where each `theta_ind` group
