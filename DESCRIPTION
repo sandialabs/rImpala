@@ -28,6 +28,7 @@ Imports:
     cli,
     einsum,
     methods,
+    mvtnorm,
     parallel,
     progress,
     stats,
