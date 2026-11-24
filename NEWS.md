@@ -1,6 +1,6 @@
 # impala (development version)
 
-Ports lanl/impala#69, #70 and #71 from python impala.
+Ports lanl/impala#69 and #71 from python impala.
 
 * parallel tempering now uses non-reversible deterministic even/odd swaps
   between adjacent temperatures by default (`setTemperatureLadder(swap_scheme =
@@ -20,11 +20,6 @@ Ports lanl/impala#69, #70 and #71 from python impala.
   previously tempered the normal density of occupied clusters and the theta0 /
   Sigma0 updates but not empty clusters, memberships or the hyperpriors, so the
   chains had no common target and swaps biased the cold chain
-* `setHierPriors(scale = "probit")` places the hierarchy of `calibHier()` on
-  the probit of the 0-1 scale, so the bounds no longer truncate
-  N(theta0, Sigma0) and tilt the hyperprior. The default stays `"unit"`
-* add `sampleHierParent()` to draw parameters of a new experiment from the
-  fitted hierarchical distribution on the right scale
 * port the material strength physics models from python impala:
   `MaterialModel()` with PTW, Johnson-Cook, Steinberg-Guinan and constant flow
   stress plus specific heat, density, melt temperature and shear modulus

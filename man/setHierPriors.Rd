@@ -10,21 +10,17 @@ setHierPriors(
   theta0_prior_cov = NULL,
   Sigma0_prior_df = NULL,
   Sigma0_prior_scale = NULL,
-  theta0_start = NULL,
-  scale = c("unit", "probit")
+  theta0_start = NULL
 )
 }
 \arguments{
 \item{obj}{`CalibSetup` object}
 
 \item{theta0_prior_mean}{prior mean of \eqn{\theta_0}, length `p`
-(default: `rep(0.5, p)` for `scale = "unit"`, `rep(0, p)` for
-`scale = "probit"`)}
+(default: `rep(0.5, p)`)}
 
 \item{theta0_prior_cov}{prior covariance of \eqn{\theta_0}, `p x p`
-(default: `diag(p) * 100`, effectively flat on the unit cube, for
-`scale = "unit"`; `diag(p)`, which makes each component of
-\eqn{\theta_0} uniform on the 0-1 scale, for `scale = "probit"`)}
+(default: `diag(p) * 100`, effectively flat on the unit cube)}
 
 \item{Sigma0_prior_df}{Inverse-Wishart degrees of freedom for
 \eqn{\Sigma_0}; must exceed `p + 1` so the prior mean exists. Larger values
@@ -32,36 +28,11 @@ pull the \eqn{\theta_j} together (default: `p + 20`)}
 
 \item{Sigma0_prior_scale}{Inverse-Wishart scale matrix, `p x p`. The prior
 mean of \eqn{\Sigma_0} is `Sigma0_prior_scale / (Sigma0_prior_df - p - 1)`
-(default: `diag(p) * 0.1^2` for `scale = "unit"`, `diag(p) * 0.25^2`,
-roughly the same spread near the middle of the bounds, for
-`scale = "probit"`)}
+(default: `diag(p) * 0.1^2`)}
 
 \item{theta0_start}{optional `ntemps x p` matrix of 0-1 scale starting values
 for \eqn{\theta_0}, one row per temperature (default: `NULL`, a random
-start satisfying the constraints). Always on the 0-1 scale, whatever
-`scale` is.}
-
-\item{scale}{the scale on which the hierarchical normal model is defined
-  (used by [calibHier()]).
-
-  `"unit"` (default, the behaviour of earlier versions): \eqn{\theta_j},
-  \eqn{\theta_0} and \eqn{\Sigma_0} live on the bounds-normalised 0-1
-  scale and \eqn{\theta_j} is restricted to the bounds. The restriction is
-  applied without its normalising constant, so the effective prior on
-  \eqn{(\theta_0, \Sigma_0)} is the stated prior multiplied by
-  \eqn{\prod_j P(\theta_j \in B | \theta_0, \Sigma_0)}. This favours a
-  small \eqn{\Sigma_0} and a \eqn{\theta_0} away from the bounds, and
-  matters when experiment-level parameters sit near a bound.
-
-  `"probit"`: the hierarchy is placed on \eqn{z = \Phi^{-1}(u)}, where
-  \eqn{u} is the 0-1 normalised parameter, so
-  \eqn{z_j \sim N(\theta_0, \Sigma_0)} with no truncation by the bounds
-  and the conjugate Gibbs updates of \eqn{\theta_0} and \eqn{\Sigma_0}
-  are exact. `theta0_prior_mean`, `theta0_prior_cov` and
-  `Sigma0_prior_scale` are then on the probit scale. Samples of `theta` and
-  `theta0` are still returned on the 0-1 scale; `Sigma0` is returned on the
-  probit scale. Constraints other than the bounds still truncate the
-  hierarchical distribution. Not supported by [calibClust()] yet.}
+start satisfying the constraints)}
 }
 \value{
 An object of class `CalibSetup`
@@ -73,13 +44,6 @@ Sets the hyperpriors used by [calibHier()] and [calibClust()].
   \eqn{N(\theta_0, \Sigma_0)}, with
   \eqn{\theta_0 \sim N(}`theta0_prior_mean`, `theta0_prior_cov`\eqn{)} and
   \eqn{\Sigma_0 \sim} Inverse-Wishart(`Sigma0_prior_df`,
-  `Sigma0_prior_scale`). With `scale = "unit"` all of these live on the 0-1
-  scale the sampler works on, not the native scale of `bounds`; with
-  `scale = "probit"` they live on the probit of that scale.
-}
-\references{
-Gelfand, A. E., Smith, A. F. M. and Lee, T.-M. (1992). Bayesian
-  analysis of constrained parameter and truncated data problems using Gibbs
-  sampling. *Journal of the American Statistical Association* 87(418),
-  523-532.
+  `Sigma0_prior_scale`). All of these live on the 0-1 scale the sampler
+  works on, not the native scale of `bounds`.
 }

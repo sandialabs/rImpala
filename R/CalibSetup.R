@@ -74,7 +74,6 @@ CalibSetup <- function(bounds, constraint_func = cf_bounds) {
     Sigma0_prior_df = NULL,
     Sigma0_prior_scale = NULL,
     theta0_start = NULL,
-    hier_scale = "unit",
     nclustmax = NULL,
     eta_prior_shape = 2,
     eta_prior_rate = 0.1,

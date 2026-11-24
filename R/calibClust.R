@@ -51,12 +51,6 @@
 #'
 calibClust <- function(setup) {
   check_hier_setup(setup, "calibClust")
-  if (identical(setup$hier_scale, "probit")) {
-    cli::cli_abort(c(
-      "{.code setHierPriors(scale = \"probit\")} is not supported by {.fn calibClust} yet.",
-      i = "Use {.code scale = \"unit\"} or {.fn calibHier}."
-    ))
-  }
 
   nexp = setup$nexp
   ntemps = setup$ntemps

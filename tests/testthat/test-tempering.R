@@ -1,6 +1,6 @@
 # Parallel tempering: swap schemes, ladder adaptation, and the consistency of
-# each sampler's tempered targets (ports of python impala's test_tempering.py,
-# test_clust_tempering.py and test_hier_scale.py).
+# each sampler's tempered targets (ports of python impala's test_tempering.py
+# and test_clust_tempering.py).
 
 ladder_setup <- function(tl, scheme = "deo", adapt = FALSE, until = NULL,
                          nmcmc = 2000, nburn = 0) {
@@ -222,7 +222,7 @@ test_that("pooled Metropolis s2 posterior is exact with tempering (s2_df = 0)", 
 })
 
 
-flat_hier_setup <- function(scale, nmcmc, ntemps = 1, ntheta = 6, nobs = 5) {
+flat_hier_setup <- function(nmcmc, ntemps = 1, ntheta = 6, nobs = 5) {
   p <- 2
   ind <- rep(seq_len(ntheta), each = nobs)
   setup <- CalibSetup(list(a = c(0, 1), b = c(0, 1)), cf_bounds)
@@ -235,68 +235,11 @@ flat_hier_setup <- function(scale, nmcmc, ntemps = 1, ntheta = 6, nobs = 5) {
   }
   setup <- setMCMC(setup, nmcmc = nmcmc, decor = 100)
   setHierPriors(setup,
-                theta0_prior_mean = rep(if (scale == "probit") 0 else 0.5, p),
+                theta0_prior_mean = rep(0.5, p),
                 theta0_prior_cov = diag(p) * 0.2^2,
                 Sigma0_prior_df = p + 4,
-                Sigma0_prior_scale = diag(p) * 0.3^2,
-                scale = scale)
+                Sigma0_prior_scale = diag(p) * 0.3^2)
 }
-
-
-test_that("setHierPriors validates scale and calibClust refuses probit", {
-  setup <- flat_hier_setup("unit", nmcmc = 10)
-  expect_equal(setup$hier_scale, "unit")
-  expect_error(setHierPriors(setup, scale = "logit"))
-  pr <- setHierPriors(setup, scale = "probit")
-  expect_equal(pr$theta0_prior_mean, c(0, 0))
-  expect_equal(pr$theta0_prior_cov, diag(2))
-  expect_error(calibClust(setClusterPriors(pr)), "not supported")
-})
-
-
-for (nt in c(1, 3)) {
-  local({
-    ntemps <- nt
-    test_that(paste0("probit hierarchy recovers the theta0 prior (ntemps = ", ntemps, ")"), {
-      skip_on_cran()  # long MCMC run; exceeds CRAN check-time budget
-      # on the probit scale theta_j ~ N(theta0, Sigma0) is not truncated, so
-      # with a flat likelihood theta0 follows its N(0, 0.2^2 I) prior (on the
-      # unit scale the bounds tilt it to sd ~ 0.16)
-      set.seed(11)
-      setup <- flat_hier_setup("probit", nmcmc = 12000, ntemps = ntemps)
-      out <- calibHier(setup)
-      th0 <- matrix(out$theta0[2001:12000, 1, ], ncol = 2)
-      expect_true(all(th0 > 0 & th0 < 1))  # returned on the 0-1 scale
-      z0 <- stats::qnorm(clip_unit(th0))
-      batches <- apply(array(z0, c(nrow(z0) / 20, 20, 2)), c(2, 3), mean)
-      mcse <- apply(batches, 2, stats::sd) / sqrt(20)
-      expect_true(all(abs(colMeans(z0)) < 4 * mcse + 0.01))
-      expect_true(all(abs(apply(z0, 2, stats::sd) / 0.2 - 1) < 0.12))
-      expect_true(all(out$theta[[1]][2001:12000, 1, , ] > 0 &
-                        out$theta[[1]][2001:12000, 1, , ] < 1))
-      if (ntemps > 1) expect_length(out$temperature_ladder, ntemps)
-
-      parent <- sampleHierParent(setup, th0, out$Sigma0[2001:12000, 1, , ])
-      expect_equal(dim(parent), dim(th0))
-      expect_true(all(parent > 0 & parent < 1))
-    })
-  })
-}
-
-
-test_that("sampleHierParent on the unit scale is the old constrained draw", {
-  setup <- flat_hier_setup("unit", nmcmc = 10)
-  th0 <- matrix(0.5, 50, 2)
-  S0 <- array(0, c(50, 2, 2))
-  for (k in 1:50) S0[k, , ] <- diag(2) * 0.01
-  set.seed(5)
-  a <- sampleHierParent(setup, th0, S0)
-  set.seed(5)
-  b <- t(vapply(1:50, function(k) {
-    as.numeric(rmvn_constrained(th0[k, ], t(chol(S0[k, , ])), setup))
-  }, numeric(2)))
-  expect_identical(a, b)
-})
 
 
 test_that("calibClust with tempering recovers the eta prior under a flat likelihood", {
@@ -304,7 +247,7 @@ test_that("calibClust with tempering recovers the eta prior under a flat likelih
   # with a flat likelihood every chain targets the clustering prior, so the
   # cold chain must reproduce the Gamma(2, 2) prior on eta (mean 1)
   set.seed(1)
-  setup <- flat_hier_setup("unit", nmcmc = 5000, ntemps = 3, ntheta = 8, nobs = 4)
+  setup <- flat_hier_setup(nmcmc = 5000, ntemps = 3, ntheta = 8, nobs = 4)
   setup <- setClusterPriors(setup, nclustmax = 8, eta_prior_shape = 2, eta_prior_rate = 2)
   out <- calibClust(setup)
   expect_lt(abs(mean(out$eta[1001:5000, 1]) - 1), 0.12)
