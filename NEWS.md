@@ -28,6 +28,16 @@ Ports lanl/impala#69 and #71 from python impala.
   `constraints_ptw()` checks the PTW parameter ordering
 * add `ModelF()` to calibrate an R function directly, with a diagonal Gaussian
   likelihood
+* add `hierTruncationWeights()`, which diagnoses the contraction that
+  `calibHier()`'s truncation of the hierarchy to the bounds induces on
+  `theta0` and `Sigma0`. The truncation is applied without its normalising
+  constant, so the effective hyperprior is the stated one times
+  `prod_j P(theta_j in B | theta0, Sigma0)`, which rewards a central `theta0`
+  and a small `Sigma0`. The function reweights the saved cold-chain draws by
+  that factor to the power `-sum(ntheta)` and reports `ess_frac`, `tilt_nats`
+  and raw-versus-reweighted summaries, so a finished run can be corrected
+  retrospectively where the reweighting is effective. `weightedQuantile()` is
+  exported alongside it (ports lanl/impala#70)
 * `CalibSetup()` now defaults `constraint_func` to `cf_bounds()`. A constraint
   function that takes a third argument receives the first model's constants,
   so it can check parameters held constant
