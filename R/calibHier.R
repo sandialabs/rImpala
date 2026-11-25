@@ -7,8 +7,7 @@
 #'   \eqn{\theta_j} are tied together by
 #'   \eqn{\theta_j \sim N(\theta_0, \Sigma_0)}, truncated to the constraints,
 #'   with the hyperpriors set by [setHierPriors()]. Parameters live on the 0-1
-#'   scale of `bounds`, or on its probit with `setHierPriors(scale = "probit")`,
-#'   in which case the bounds no longer truncate the hierarchical distribution.
+#'   scale of `bounds`.
 #'
 #' @param setup an object of class `CalibSetup`, with [setHierPriors()] called
 #'
@@ -16,8 +15,7 @@
 #' - theta: list over experiments of `nmcmc x ntemps x ntheta x p` arrays of
 #'   \eqn{\theta_j} samples (0-1 scale)
 #' - theta0: `nmcmc x ntemps x p` array of \eqn{\theta_0} samples
-#' - Sigma0: `nmcmc x ntemps x p x p` array of \eqn{\Sigma_0} samples (on
-#'   the probit scale when `setHierPriors(scale = "probit")`)
+#' - Sigma0: `nmcmc x ntemps x p x p` array of \eqn{\Sigma_0} samples
 #' - s2: list over experiments of error variance samples
 #' - count: list over experiments of `ntemps x ntheta` acceptance counts
 #' - count_s2: acceptance counts for Metropolis error variance updates
@@ -33,8 +31,7 @@
 #'   native scale
 #' - theta_parent_native: data frame of draws from
 #'   \eqn{N(\theta_0, \Sigma_0)} (truncated to the constraints) at each cold
-#'   chain sample, i.e. the parameter of a new, unobserved experiment (see
-#'   [sampleHierParent()])
+#'   chain sample, i.e. the parameter of a new, unobserved experiment
 #' - temperature_ladder, swap_rejection, round_trips: tempering diagnostics,
 #'   see [setTemperatureLadder()]
 #'
@@ -62,10 +59,6 @@ calibHier <- function(setup) {
   # setup$adapt_ladder is TRUE (see tempering.R)
   sched = make_swap_scheduler(setup, "interleaved")
   itl = sched$itl
-  # scale of the hierarchical normal model (see setHierPriors(scale =)): with
-  # "probit", theta and theta0 are sampled as z = qnorm(u), u on the 0-1 scale,
-  # so theta_j ~ N(theta0, Sigma0) is not truncated by the bounds
-  latent = identical(setup$hier_scale, "probit")
   ntheta_vec = setup$ntheta
   ntheta_tot = sum(ntheta_vec)
 
@@ -97,7 +90,6 @@ calibHier <- function(setup) {
   log_s2 = lapply(1:nexp, function(i) array(0, c(nmcmc, ntemps, setup$ns2[[i]])))
 
   theta0[1, , ] = theta0_start_values(setup)
-  if (latent) theta0[1, , ] = stats::qnorm(clip_unit(theta0[1, , ]))
   Sigma0_start = Sigma0_prior_scale / (Sigma0_prior_df - p - 1)
   Sigma0_inv = array(0, c(ntemps, p, p))
   Sigma0_ldet = rep(0, ntemps)
@@ -138,10 +130,10 @@ calibHier <- function(setup) {
     init = array(0, c(ntemps, ntheta_vec[i], p))
     for (t in 1:ntemps) {
       L = t(chol(Sigma0[1, t, , ]))
-      init[t, , ] = rmvn_constrained(matrix(theta0[1, t, ], ntheta_vec[i], p, byrow = TRUE), L, setup, latent = latent)
+      init[t, , ] = rmvn_constrained(matrix(theta0[1, t, ], ntheta_vec[i], p, byrow = TRUE), L, setup)
     }
     theta[[i]][1, , , ] = init
-    pred_curr[[i]] = eval_by_theta(setup$models[[i]], init, setup$theta_ind[[i]], setup, latent)
+    pred_curr[[i]] = eval_by_theta(setup$models[[i]], init, setup$theta_ind[[i]], setup)
     llik_curr[[i]] = matrix(0, ntemps, ntheta_vec[i])
     cov_curr[[i]] = vector("list", ntemps)
     for (t in 1:ntemps) {
@@ -183,7 +175,7 @@ calibHier <- function(setup) {
       log_s2[[i]][m, , ] = log_s2[[i]][m - 1, , ]
       setup$models[[i]] = step_m(setup$models[[i]])
       if (setup$models[[i]]$stochastic) {
-        pred_curr[[i]] = eval_by_theta(setup$models[[i]], th_now(i, m), setup$theta_ind[[i]], setup, latent)
+        pred_curr[[i]] = eval_by_theta(setup$models[[i]], th_now(i, m), setup$theta_ind[[i]], setup)
         for (t in 1:ntemps) for (j in 1:ntheta_vec[i]) {
           llik_curr[[i]][t, j] = llik_ij(i, pred_curr[[i]][t, ], cov_curr[[i]][[t]][[j]], j)
         }
@@ -202,12 +194,12 @@ calibHier <- function(setup) {
         cand[t, j, ] = cur[t, j, ] +
           t(chol(cov_theta_cand$S[[i]][t, j, , ])) %*% stats::rnorm(p)
       }
-      good = matrix(theta_ok(matrix(cand, ntemps * ntheta_vec[i], p), setup, latent), ntemps, ntheta_vec[i])
+      good = matrix(theta_ok(matrix(cand, ntemps * ntheta_vec[i], p), setup), ntemps, ntheta_vec[i])
       eval_arr = cur
       for (t in 1:ntemps) for (j in 1:ntheta_vec[i]) {
         if (good[t, j]) eval_arr[t, j, ] = cand[t, j, ]
       }
-      pred_cand = eval_by_theta(setup$models[[i]], eval_arr, setup$theta_ind[[i]], setup, latent)
+      pred_cand = eval_by_theta(setup$models[[i]], eval_arr, setup$theta_ind[[i]], setup)
       llik_cand = llik_curr[[i]]
       for (t in 1:ntemps) for (j in 1:ntheta_vec[i]) {
         if (good[t, j]) {
@@ -291,7 +283,7 @@ calibHier <- function(setup) {
       prec = ntheta_tot * itl[t] * Sigma0_inv[t, , ] + theta0_prior_prec
       cc = chol2inv(chol(prec))
       dd = itl[t] * Sigma0_inv[t, , ] %*% theta_sum[t, ] + theta0_prior_prec %*% theta0_prior_mean
-      theta0[m, t, ] = rmvn_constrained(t(cc %*% dd), t(chol(cc)), setup, latent = latent)
+      theta0[m, t, ] = rmvn_constrained(t(cc %*% dd), t(chol(cc)), setup)
     }
 
     # ---- Gibbs update Sigma0 ----
@@ -315,7 +307,7 @@ calibHier <- function(setup) {
         t0_cur = t0_now(m)
         t0_cand = t0_cur
         t0_cand[, k] = t0_cand[, k] + z
-        alpha_tot = ifelse(theta_ok(t0_cand, setup, latent), 0, -Inf)
+        alpha_tot = ifelse(theta_ok(t0_cand, setup), 0, -Inf)
         alpha_tot = alpha_tot -
           0.5 * rowSums((sweep(t0_cand, 2, theta0_prior_mean) %*% theta0_prior_prec) * sweep(t0_cand, 2, theta0_prior_mean)) +
           0.5 * rowSums((sweep(t0_cur, 2, theta0_prior_mean) %*% theta0_prior_prec) * sweep(t0_cur, 2, theta0_prior_mean))
@@ -326,11 +318,11 @@ calibHier <- function(setup) {
           cur = th_now(i, m)
           cand = cur
           cand[, , k] = cand[, , k] + z
-          good = matrix(theta_ok(matrix(cand, ntemps * ntheta_vec[i], p), setup, latent), ntemps, ntheta_vec[i])
+          good = matrix(theta_ok(matrix(cand, ntemps * ntheta_vec[i], p), setup), ntemps, ntheta_vec[i])
           alpha_tot[rowSums(!good) > 0] = -Inf
           eval_arr = cur
           for (t in 1:ntemps) if (all(good[t, ])) eval_arr[t, , ] = cand[t, , ]
-          pred_cands[[i]] = eval_by_theta(setup$models[[i]], eval_arr, setup$theta_ind[[i]], setup, latent)
+          pred_cands[[i]] = eval_by_theta(setup$models[[i]], eval_arr, setup$theta_ind[[i]], setup)
           llik_cands[[i]] = llik_curr[[i]]
           for (t in 1:ntemps) {
             if (all(good[t, ])) {
@@ -406,12 +398,6 @@ calibHier <- function(setup) {
   }
 
   # ---- outputs ----
-  if (latent) {
-    # theta and theta0 are returned on the 0-1 scale like the "unit" model, so
-    # post-processing is unchanged; Sigma0 stays on the probit scale
-    theta = lapply(theta, stats::pnorm)
-    theta0 = stats::pnorm(theta0)
-  }
   s2 = lapply(log_s2, exp)
   pn = names(setup$bounds)
   to_native = function(x) {
@@ -423,8 +409,10 @@ calibHier <- function(setup) {
     lapply(1:ntheta_vec[i], function(j) to_native(theta[[i]][, 1, j, ]))
   })
   theta0_native = to_native(theta0[, 1, ])
-  parent = sampleHierParent(setup, matrix(theta0[, 1, ], nmcmc, p),
-                            array(Sigma0[, 1, , ], c(nmcmc, p, p)))
+  parent = matrix(0, nmcmc, p)
+  for (mm in 1:nmcmc) {
+    parent[mm, ] = rmvn_constrained(theta0[mm, 1, ], t(chol(Sigma0[mm, 1, , ])), setup)
+  }
 
   count_temper = count_temper + t(count_temper) - diag(diag(count_temper), ntemps)
 

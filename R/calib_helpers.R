@@ -99,10 +99,8 @@ check_constraints <- function(setup, x) {
 
 
 # TRUE/FALSE per row of an (n x p) 0-1 scale matrix: satisfies the constraints.
-# With `latent = TRUE`, x is on the probit scale (see setHierPriors(scale =)).
-theta_ok <- function(x, setup, latent = FALSE) {
+theta_ok <- function(x, setup) {
   x = matrix(x, ncol = setup$p)
-  if (latent) x = stats::pnorm(x)
   as.logical(check_constraints(setup, tran_unif(x, setup$bounds_mat, names(setup$bounds))))
 }
 
@@ -127,9 +125,8 @@ sample_unif_constrained <- function(n, setup, maxiter = 10000) {
 
 # One multivariate normal draw per row of `means` (n x p), all sharing the
 # covariance whose lower Cholesky factor is `L`, resampled until each row
-# satisfies the constraints (a truncated normal). With `latent = TRUE` the draws
-# are on the probit scale, so only constraints other than the bounds truncate.
-rmvn_constrained <- function(means, L, setup, maxiter = 10000, latent = FALSE) {
+# satisfies the constraints (a truncated normal).
+rmvn_constrained <- function(means, L, setup, maxiter = 10000) {
   means = matrix(means, ncol = setup$p)
   n = nrow(means)
   draw = function(k) {
@@ -137,7 +134,7 @@ rmvn_constrained <- function(means, L, setup, maxiter = 10000, latent = FALSE) {
       t(L %*% matrix(stats::rnorm(setup$p * length(k)), setup$p, length(k)))
   }
   x = draw(seq_len(n))
-  good = theta_ok(x, setup, latent)
+  good = theta_ok(x, setup)
   it = 0
   while (any(!good)) {
     it = it + 1
@@ -149,7 +146,7 @@ rmvn_constrained <- function(means, L, setup, maxiter = 10000, latent = FALSE) {
     }
     bad = which(!good)
     x[bad, ] = draw(bad)
-    good[bad] = theta_ok(x[bad, , drop = FALSE], setup, latent)
+    good[bad] = theta_ok(x[bad, , drop = FALSE], setup)
   }
   x
 }
@@ -190,14 +187,12 @@ dmvn_rows <- function(x, mean, prec, ldet) {
 # Evaluate an emulator at every (temperature, theta) row and keep, for each
 # observation, the prediction made with the theta that observation belongs to.
 # `theta` is (ntemps x ntheta x p) on the 0-1 scale; `theta_ind` maps the ny
-# observations to 1..ntheta. Returns (ntemps x ny). With `latent = TRUE`,
-# `theta` is on the probit scale.
-eval_by_theta <- function(model, theta, theta_ind, setup, latent = FALSE) {
+# observations to 1..ntheta. Returns (ntemps x ny).
+eval_by_theta <- function(model, theta, theta_ind, setup) {
   ntemps = dim(theta)[1]
   ntheta = dim(theta)[2]
   # row r of `mat` is temperature ((r - 1) %% ntemps) + 1 and theta ((r - 1) %/% ntemps) + 1
   mat = matrix(theta, ntemps * ntheta, setup$p)
-  if (latent) mat = stats::pnorm(mat)
   full = evalm(model, tran_unif(mat, setup$bounds_mat, names(setup$bounds)), TRUE)
   ny = length(theta_ind)
   full = matrix(full, ntemps * ntheta, ny)
@@ -347,10 +342,4 @@ swap_rows <- function(x, a, b) {
     x[c(a, b), , , ] = x[c(b, a), , , ]
   }
   x
-}
-
-
-# Clip values on the 0-1 scale away from 0 and 1 before taking the probit.
-clip_unit <- function(u, eps = 1e-12) {
-  pmin(pmax(u, eps), 1 - eps)
 }
